@@ -65,3 +65,35 @@ export const CheckIcon = () => (
     <path d="M20 6 9 17l-5-5" />
   </svg>
 )
+
+export const SettingsIcon = () => (
+  <svg {...base}>
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 7 19.4l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0-1.1-2.7H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 10 4.6V4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z" />
+  </svg>
+)
+
+export const ChatIcon = () => (
+  <svg {...base}>
+    <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20l1.3-3.9A8.4 8.4 0 1 1 21 11.5z" />
+  </svg>
+)
+
+export const SendIcon = () => (
+  <svg {...base}>
+    <path d="M4 12 20 4l-6 16-2.5-6.5L4 12z" />
+  </svg>
+)
+
+export const SpeakerIcon = () => (
+  <svg {...base}>
+    <path d="M4 9v6h4l5 4V5L8 9H4z" />
+    <path d="M16 8.5a4 4 0 0 1 0 7M18.5 6a7 7 0 0 1 0 12" />
+  </svg>
+)
+
+export const CloseIcon = () => (
+  <svg {...base}>
+    <path d="M6 6l12 12M18 6 6 18" />
+  </svg>
+)
