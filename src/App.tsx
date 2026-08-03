@@ -3,7 +3,9 @@ import { JoinScreen } from './components/JoinScreen'
 import { RoomView } from './components/RoomView'
 import { API_BASE } from './lib/api'
 
-const serverUrl = import.meta.env.VITE_LIVEKIT_URL as string | undefined
+const serverUrl =
+  (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
+  'wss://ms-hack-ly6rx40h.livekit.cloud'
 
 export default function App() {
   const [session, setSession] = useState<{
