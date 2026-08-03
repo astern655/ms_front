@@ -1,0 +1,356 @@
+:root {
+  --text: #f5f5f7;
+  --text-2: rgba(235, 235, 245, 0.6);
+  --accent: #0a84ff;
+  --danger: #ff453a;
+  --glass: rgba(255, 255, 255, 0.1);
+  --glass-strong: rgba(255, 255, 255, 0.16);
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --radius: 26px;
+
+  font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', system-ui,
+    'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1200px 800px at 18% -12%, rgba(88, 86, 214, 0.38), transparent 60%),
+    radial-gradient(1000px 700px at 105% 15%, rgba(10, 132, 255, 0.28), transparent 55%),
+    linear-gradient(160deg, #0d0d12, #0b0b0f 62%);
+  background-attachment: fixed;
+}
+
+/* --- Liquid Glass material --- */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+/* --- Join screen --- */
+.join-wrap {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.join-card {
+  width: min(420px, 92vw);
+  padding: 28px;
+  display: grid;
+  gap: 18px;
+}
+
+.brand {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: var(--text-2);
+  font-size: 15px;
+}
+
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+}
+
+.segmented button {
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  padding: 9px 12px;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.segmented button[aria-selected='true'] {
+  background: var(--glass-strong);
+  color: var(--text);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.field {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.field::placeholder {
+  color: rgba(235, 235, 245, 0.35);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.35);
+}
+
+.code-field {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+}
+
+.code-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 12px 12px 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.code-text {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.4);
+  transition: transform 0.12s ease, filter 0.2s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 14px;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.icon-btn.small {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+}
+
+.icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* --- In-call --- */
+.room {
+  position: fixed;
+  inset: 0;
+}
+
+.controlbar {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 34px;
+  z-index: 20;
+}
+
+.ctrl {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.2s ease;
+}
+
+.ctrl:hover {
+  transform: translateY(-2px);
+}
+
+.ctrl:active {
+  transform: scale(0.95);
+}
+
+.ctrl-off {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-2);
+}
+
+.ctrl-on {
+  background: var(--glass-strong);
+}
+
+.ctrl-leave {
+  background: var(--danger);
+  border-color: transparent;
+  color: #fff;
+}
+
+.code-pill {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 16px;
+  border-radius: 18px;
+}
+
+.code-pill b {
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
+
+.lang-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lang-row .subtitle {
+  margin: 0;
+}
+
+.segmented.compact {
+  flex: 1;
+  max-width: 220px;
+}
+
+.segmented.compact button {
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.captions {
+  position: fixed;
+  left: 50%;
+  bottom: 104px;
+  transform: translateX(-50%);
+  width: min(760px, 92vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 15;
+  pointer-events: none;
+}
+
+.caption {
+  max-width: 100%;
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-size: 16px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.caption b {
+  color: var(--accent);
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.code-pill .subtitle {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* --- LiveKit prebuilt tile tweaks --- */
+.lk-grid-layout {
+  padding: 16px 16px 110px;
+  gap: 12px;
+  height: 100dvh;
+}
+
+.lk-participant-tile {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctrl,
+  .btn-primary,
+  .segmented button {
+    transition: none;
+  }
+  .ctrl:hover {
+    transform: none;
+  }
+}
