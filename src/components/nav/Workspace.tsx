@@ -15,6 +15,7 @@ import {
 } from '../../lib/teams'
 import { GroupSettings } from '../GroupSettings'
 import { ProfileEdit } from '../ProfileEdit'
+import { DocsView } from '../DocsView'
 import { SettingsIcon } from '../icons'
 
 const serverUrl =
@@ -46,6 +47,7 @@ export function Workspace({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [groupMenu, setGroupMenu] = useState(false)
+  const [view, setView] = useState<'board' | 'docs'>('board')
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const activeTeamId = active?.team.id ?? null
@@ -253,6 +255,17 @@ export function Workspace({
           </div>
         )}
 
+        {!active && activeGroup && (
+          <div className="tb-toggle">
+            <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>
+              보드
+            </button>
+            <button className={view === 'docs' ? 'on' : ''} onClick={() => setView('docs')}>
+              문서
+            </button>
+          </div>
+        )}
+
         <div className="tb-right">
           {active && (
             <button className="btn-ghost" onClick={() => setActive(null)}>
@@ -279,6 +292,8 @@ export function Workspace({
             lang={profile.language}
             onLeave={() => setActive(null)}
           />
+        ) : activeGroup && view === 'docs' ? (
+          <DocsView groupId={activeGroup.id} />
         ) : activeGroup ? (
           <div className="board">
             {teams.map((t) => {
