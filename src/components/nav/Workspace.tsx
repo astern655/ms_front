@@ -168,19 +168,25 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
               {teams.map((t) => {
                 const here = presence[t.id] ?? []
                 return (
-                  <button
-                    key={t.id}
-                    className={`team-item ${t.id === activeTeamId ? 'on' : ''}`}
-                    onClick={() => enterTeam(t)}
-                  >
-                    <span className="hash">#</span>
-                    <span className="team-name">{t.name}</span>
+                  <div key={t.id} className="team-block">
+                    <button
+                      className={`team-item ${t.id === activeTeamId ? 'on' : ''}`}
+                      onClick={() => enterTeam(t)}
+                    >
+                      <span className="hash">#</span>
+                      <span className="team-name">{t.name}</span>
+                    </button>
                     {here.length > 0 && (
-                      <span className="pcount" title={here.join(', ')}>
-                        {here.length}
-                      </span>
+                      <ul className="member-list">
+                        {here.map((name, i) => (
+                          <li key={`${name}-${i}`} className="member">
+                            <span className="member-dot" />
+                            {name}
+                          </li>
+                        ))}
+                      </ul>
                     )}
-                  </button>
+                  </div>
                 )
               })}
               {teams.length === 0 && <p className="ws-hint">팀을 만들어 시작하세요</p>}
