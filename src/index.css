@@ -463,6 +463,18 @@ body {
   font-size: 16px;
   line-height: 1.35;
   text-align: center;
+  animation: cap-in 0.18s ease-out;
+}
+
+@keyframes cap-in {
+  from {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 
 .caption b {
@@ -488,6 +500,40 @@ body {
   overflow: hidden;
 }
 
+/* --- Screen-share spotlight (our layout) --- */
+.stage-spotlight {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 110px;
+  gap: 12px;
+}
+
+.spot-main {
+  flex: 1;
+  min-height: 0;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.spot-main .lk-participant-tile {
+  height: 100%;
+}
+
+.spot-strip {
+  display: flex;
+  gap: 12px;
+  height: 132px;
+  overflow-x: auto;
+}
+
+.spot-strip .lk-participant-tile {
+  flex: 0 0 auto;
+  width: 200px;
+  height: 132px;
+  border-radius: 16px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ctrl,
   .btn-primary,
@@ -497,18 +543,24 @@ body {
   .ctrl:hover {
     transform: none;
   }
+  .sheet,
+  .chat-panel,
+  .caption {
+    animation: none;
+  }
 }
 
 /* --- Settings sheet --- */
+/* Transparent click-catcher; panel floats above the bottom control bar. */
 .sheet-backdrop {
   position: fixed;
   inset: 0;
   z-index: 30;
-  background: rgba(0, 0, 0, 0.4);
+  background: transparent;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 16px;
+  padding: 0 16px 104px;
 }
 
 .sheet {
@@ -517,6 +569,18 @@ body {
   display: grid;
   gap: 18px;
   border-radius: 28px;
+  animation: sheet-up 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 
 .sheet-grabber {
@@ -629,6 +693,18 @@ input[type='range']::-webkit-slider-thumb {
   flex-direction: column;
   padding: 16px;
   border-radius: 24px;
+  animation: panel-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes panel-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 
 .chat-list {

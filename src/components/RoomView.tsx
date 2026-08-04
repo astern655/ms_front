@@ -35,8 +35,27 @@ function Stage() {
     ],
     { onlySubscribed: false },
   )
+  const screens = tracks.filter((t) => t.source === Track.Source.ScreenShare)
+  const cams = tracks.filter((t) => t.source === Track.Source.Camera)
+
+  // Screen share spotlight (our layout): big shared screen + camera thumbnails.
+  if (screens.length > 0) {
+    return (
+      <div className="stage-spotlight">
+        <div className="spot-main">
+          <ParticipantTile trackRef={screens[0]} />
+        </div>
+        <div className="spot-strip">
+          {cams.map((t) => (
+            <ParticipantTile key={`${t.participant.identity}-cam`} trackRef={t} />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <GridLayout tracks={tracks}>
+    <GridLayout tracks={cams}>
       <ParticipantTile />
     </GridLayout>
   )
