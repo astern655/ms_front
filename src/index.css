@@ -211,6 +211,89 @@ body {
   height: 100%;
   width: 100%;
   overflow: hidden;
+  display: flex;
+}
+
+/* Video area (shrinks when the dock is open) */
+.stage-area {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Right dock: chat/captions, docs, or participants beside the video */
+.dock {
+  flex: 0 0 auto;
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(20, 20, 26, 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+.dock.wide {
+  width: min(640px, 60%);
+}
+
+.dock-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex: 0 0 auto;
+}
+
+.dock-tabs > button {
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  padding: 7px 11px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dock-tabs > button.on {
+  background: var(--glass-strong);
+  color: var(--text);
+}
+
+.dock-close {
+  margin-left: auto;
+}
+
+.dock-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.dock-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+}
+
+.dock-fill .chat-list {
+  padding: 4px 2px;
+}
+
+.dock-fill .chat-input {
+  margin-top: 8px;
+}
+
+.dock .docs-view {
+  position: static;
+  flex: 1;
+  padding: 12px;
 }
 
 .controlbar {

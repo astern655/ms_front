@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useChat, useLocalParticipant } from '@livekit/components-react'
-import { SendIcon, CloseIcon } from './icons'
+import { SendIcon } from './icons'
 import type { TranscriptEntry } from '../lib/caption'
 
 type FeedItem = {
@@ -13,17 +13,12 @@ type FeedItem = {
   sign?: boolean
 }
 
-// Unified feed: typed chat messages + live captions (in the viewer's language),
-// time-ordered — so reading the panel alone follows the whole conversation.
-export function ChatPanel({
-  open,
-  onClose,
+// Dock body: typed chat + live captions (viewer's language), time-ordered.
+export function ChatFeed({
   captions,
   displayLang,
   myName,
 }: {
-  open: boolean
-  onClose: () => void
   captions: TranscriptEntry[]
   displayLang: string
   myName: string
@@ -55,8 +50,8 @@ export function ChatPanel({
   }, [chatMessages, captions, displayLang, myName, localParticipant.identity])
 
   useEffect(() => {
-    if (open) endRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [feed.length, open])
+    endRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [feed.length])
 
   const submit = async () => {
     const t = text.trim()
@@ -65,16 +60,8 @@ export function ChatPanel({
     setText('')
   }
 
-  if (!open) return null
   return (
-    <div className="glass chat-panel" role="dialog" aria-label="채팅">
-      <div className="chat-head">
-        <h2>채팅 · 자막</h2>
-        <button className="icon-btn small" onClick={onClose} aria-label="닫기">
-          <CloseIcon />
-        </button>
-      </div>
-
+    <div className="dock-fill">
       <div className="chat-list">
         {feed.length === 0 && (
           <p className="chat-empty">말하면 자막이, 입력하면 메시지가 여기에 기록됩니다.</p>

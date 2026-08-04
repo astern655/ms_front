@@ -13,7 +13,7 @@ import {
 import { RoomEvent, Track, type RemoteAudioTrack } from 'livekit-client'
 import { Captions } from './Captions'
 import { SettingsSheet } from './SettingsSheet'
-import { ChatPanel } from './ChatPanel'
+import { ChatFeed } from './ChatPanel'
 import { DocsView } from './DocsView'
 import { useLocalMic } from '../lib/useLocalMic'
 import { useCaptions } from '../lib/useCaptions'
@@ -33,18 +33,11 @@ import {
   DocIcon,
 } from './icons'
 
-function ParticipantsPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+function RosterBody() {
   const participants = useParticipants()
-  if (!open) return null
   return (
-    <div className="glass people-panel" role="dialog" aria-label="참가자">
-      <div className="chat-head">
-        <h2>참가자 {participants.length}</h2>
-        <button className="icon-btn small" onClick={onClose} aria-label="닫기">
-          <CloseIcon />
-        </button>
-      </div>
-      <div className="chat-list">
+    <div className="dock-fill">
+      <div className="chat-list roster">
         {participants.map((p) => (
           <div key={p.identity} className="roster-item">
             <span className="roster-name">
@@ -173,9 +166,8 @@ function RoomInner({
   const [micDeviceId, setMicDeviceId] = useState<string | undefined>(undefined)
   const [speakerVolume, setSpeakerVolume] = useState(100)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [chatOpen, setChatOpen] = useState(false)
-  const [peopleOpen, setPeopleOpen] = useState(false)
-  const [docsOpen, setDocsOpen] = useState(false)
+  const [panel, setPanel] = useState<'chat' | 'docs' | 'people' | null>(null)
+  const togglePanel = (p: 'chat' | 'docs' | 'people') => setPanel((cur) => (cur === p ? null : p))
 
   const mic = useLocalMic(room, micDeviceId)
   useSpeakerVolume(speakerVolume / 100)
@@ -183,79 +175,85 @@ function RoomInner({
 
   return (
     <>
-      <Stage />
-      <CodePill code={code} />
-      <Captions entries={captions} displayLang={lang} />
+      <div className="stage-area">
+        <Stage />
+        <CodePill code={code} />
+        <Captions entries={captions} displayLang={lang} />
 
-      <div className="glass controlbar">
-        <button
-          className={`ctrl ${mic.muted ? 'ctrl-off' : 'ctrl-on'}`}
-          onClick={mic.toggleMute}
-          aria-pressed={!mic.muted}
-          aria-label="마이크"
-          title="마이크"
-        >
-          {mic.muted ? <MicOffIcon /> : <MicIcon />}
-        </button>
-        <Toggle source={Track.Source.Camera} on={<VideoIcon />} off={<VideoOffIcon />} label="카메라" />
-        <Toggle source={Track.Source.ScreenShare} on={<ScreenIcon />} off={<ScreenIcon />} label="화면 공유" />
-        <button
-          className={`ctrl ${settingsOpen ? 'ctrl-on' : 'ctrl-off'}`}
-          onClick={() => setSettingsOpen((v) => !v)}
-          aria-label="설정"
-          title="설정"
-        >
-          <SettingsIcon />
-        </button>
-        <button
-          className={`ctrl ${chatOpen ? 'ctrl-on' : 'ctrl-off'}`}
-          onClick={() => setChatOpen((v) => !v)}
-          aria-label="채팅"
-          title="채팅"
-        >
-          <ChatIcon />
-        </button>
-        <button
-          className={`ctrl ${peopleOpen ? 'ctrl-on' : 'ctrl-off'}`}
-          onClick={() => setPeopleOpen((v) => !v)}
-          aria-label="참가자"
-          title="참가자"
-        >
-          <PeopleIcon />
-        </button>
-        <button
-          className={`ctrl ${docsOpen ? 'ctrl-on' : 'ctrl-off'}`}
-          onClick={() => setDocsOpen((v) => !v)}
-          aria-label="문서"
-          title="문서"
-        >
-          <DocIcon />
-        </button>
-        <button className="ctrl ctrl-leave" onClick={() => room.disconnect()} aria-label="나가기" title="나가기">
-          <LeaveIcon />
-        </button>
+        <div className="glass controlbar">
+          <button
+            className={`ctrl ${mic.muted ? 'ctrl-off' : 'ctrl-on'}`}
+            onClick={mic.toggleMute}
+            aria-pressed={!mic.muted}
+            aria-label="마이크"
+            title="마이크"
+          >
+            {mic.muted ? <MicOffIcon /> : <MicIcon />}
+          </button>
+          <Toggle source={Track.Source.Camera} on={<VideoIcon />} off={<VideoOffIcon />} label="카메라" />
+          <Toggle source={Track.Source.ScreenShare} on={<ScreenIcon />} off={<ScreenIcon />} label="화면 공유" />
+          <button
+            className={`ctrl ${settingsOpen ? 'ctrl-on' : 'ctrl-off'}`}
+            onClick={() => setSettingsOpen((v) => !v)}
+            aria-label="설정"
+            title="설정"
+          >
+            <SettingsIcon />
+          </button>
+          <button
+            className={`ctrl ${panel === 'chat' ? 'ctrl-on' : 'ctrl-off'}`}
+            onClick={() => togglePanel('chat')}
+            aria-label="채팅·자막"
+            title="채팅·자막"
+          >
+            <ChatIcon />
+          </button>
+          <button
+            className={`ctrl ${panel === 'people' ? 'ctrl-on' : 'ctrl-off'}`}
+            onClick={() => togglePanel('people')}
+            aria-label="참가자"
+            title="참가자"
+          >
+            <PeopleIcon />
+          </button>
+          <button
+            className={`ctrl ${panel === 'docs' ? 'ctrl-on' : 'ctrl-off'}`}
+            onClick={() => togglePanel('docs')}
+            aria-label="문서"
+            title="문서"
+          >
+            <DocIcon />
+          </button>
+          <button className="ctrl ctrl-leave" onClick={() => room.disconnect()} aria-label="나가기" title="나가기">
+            <LeaveIcon />
+          </button>
+        </div>
       </div>
 
-      {docsOpen && (
-        <div className="docs-overlay glass">
-          <div className="docs-overlay-head">
-            <span className="subtitle" style={{ margin: 0, fontWeight: 700 }}>문서</span>
-            <button className="icon-btn small" onClick={() => setDocsOpen(false)} aria-label="문서 닫기">
+      {panel && (
+        <div className={`dock ${panel === 'docs' ? 'wide' : ''}`}>
+          <div className="dock-tabs">
+            <button className={panel === 'chat' ? 'on' : ''} onClick={() => setPanel('chat')}>
+              채팅·자막
+            </button>
+            <button className={panel === 'docs' ? 'on' : ''} onClick={() => setPanel('docs')}>
+              문서
+            </button>
+            <button className={panel === 'people' ? 'on' : ''} onClick={() => setPanel('people')}>
+              참가자
+            </button>
+            <button className="icon-btn small dock-close" onClick={() => setPanel(null)} aria-label="닫기">
               <CloseIcon />
             </button>
           </div>
-          <DocsView groupId={groupId} />
+          <div className="dock-body">
+            {panel === 'chat' && <ChatFeed captions={captions} displayLang={lang} myName={name} />}
+            {panel === 'docs' && <DocsView groupId={groupId} />}
+            {panel === 'people' && <RosterBody />}
+          </div>
         </div>
       )}
 
-      <ChatPanel
-        open={chatOpen}
-        onClose={() => setChatOpen(false)}
-        captions={captions}
-        displayLang={lang}
-        myName={name}
-      />
-      <ParticipantsPanel open={peopleOpen} onClose={() => setPeopleOpen(false)} />
       <SettingsSheet
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
