@@ -118,6 +118,21 @@ body {
   color: rgba(235, 235, 245, 0.35);
 }
 
+/* Native dropdown options were white-on-white — force a readable dark surface. */
+select.field {
+  background-color: #22222a;
+}
+
+option {
+  background: #1e1e24;
+  color: #f5f5f7;
+}
+
+::selection {
+  background: rgba(10, 132, 255, 0.45);
+  color: #fff;
+}
+
 .field:focus {
   outline: none;
   border-color: var(--accent);
@@ -223,6 +238,7 @@ body {
 
 /* Right dock: chat/captions, docs, or participants beside the video */
 .dock {
+  position: relative;
   flex: 0 0 auto;
   width: 360px;
   display: flex;
@@ -231,6 +247,20 @@ body {
   background: rgba(20, 20, 26, 0.72);
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+
+.dock-resize {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 27;
+}
+
+.dock-resize:hover {
+  background: linear-gradient(to right, transparent, rgba(10, 132, 255, 0.5), transparent);
 }
 
 .dock.wide {

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode, type MouseEvent as ReactMouseEvent } from 'react'
 import '@livekit/components-styles'
 import {
   LiveKitRoom,
@@ -179,6 +179,20 @@ function RoomInner({
   const [peopleOpen, setPeopleOpen] = useState(false)
   const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
   const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
+  const [dockWidth, setDockWidth] = useState(400)
+  const startResize = (e: ReactMouseEvent) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startW = dockWidth
+    const onMove = (ev: MouseEvent) =>
+      setDockWidth(Math.min(900, Math.max(300, startW + (startX - ev.clientX))))
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+    }
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
 
   const mic = useLocalMic(room, micDeviceId)
   useSpeakerVolume(speakerVolume / 100)
@@ -242,7 +256,8 @@ function RoomInner({
       </div>
 
       {panel && (
-        <div className={`dock ${panel === 'docs' ? 'wide' : ''}`}>
+        <div className="dock" style={{ width: dockWidth }}>
+          <div className="dock-resize" onMouseDown={startResize} title="드래그로 크기 조절" />
           <div className="dock-tabs">
             <button className={panel === 'chat' ? 'on' : ''} onClick={() => setPanel('chat')}>
               채팅·자막
