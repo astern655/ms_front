@@ -16,7 +16,7 @@ import {
 import { GroupSettings } from '../GroupSettings'
 import { ProfileEdit } from '../ProfileEdit'
 import { DocsView } from '../DocsView'
-import { AiPanel } from '../AiPanel'
+import { ChatBot } from '../ChatBot'
 import { SettingsIcon, LogoutIcon } from '../icons'
 
 const serverUrl =
@@ -48,7 +48,7 @@ export function Workspace({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [groupMenu, setGroupMenu] = useState(false)
-  const [view, setView] = useState<'board' | 'docs' | 'ai'>('board')
+  const [view, setView] = useState<'board' | 'docs'>('board')
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const activeTeamId = active?.team.id ?? null
@@ -268,9 +268,6 @@ export function Workspace({
             <button className={view === 'docs' ? 'on' : ''} onClick={() => setView('docs')}>
               문서
             </button>
-            <button className={view === 'ai' ? 'on' : ''} onClick={() => setView('ai')}>
-              AI
-            </button>
           </div>
         )}
 
@@ -302,10 +299,6 @@ export function Workspace({
           />
         ) : activeGroup && view === 'docs' ? (
           <DocsView groupId={activeGroup.id} />
-        ) : activeGroup && view === 'ai' ? (
-          <div className="ai-page">
-            <AiPanel groupId={activeGroup.id} />
-          </div>
         ) : activeGroup ? (
           <div className="board">
             {teams.map((t) => {
@@ -365,6 +358,8 @@ export function Workspace({
           onSaved={onProfileChange}
         />
       )}
+
+      {activeGroup && <ChatBot groupId={activeGroup.id} />}
     </div>
   )
 }

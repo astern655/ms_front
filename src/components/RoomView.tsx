@@ -15,7 +15,6 @@ import { Captions } from './Captions'
 import { SettingsSheet } from './SettingsSheet'
 import { ChatFeed } from './ChatPanel'
 import { DocsView } from './DocsView'
-import { AiPanel } from './AiPanel'
 import { useLocalMic } from '../lib/useLocalMic'
 import { useCaptions } from '../lib/useCaptions'
 import {
@@ -30,7 +29,6 @@ import {
   PeopleIcon,
   CloseIcon,
   DocIcon,
-  AiIcon,
 } from './icons'
 
 function ParticipantsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -157,8 +155,8 @@ function RoomInner({
   const [speakerVolume, setSpeakerVolume] = useState(100)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [peopleOpen, setPeopleOpen] = useState(false)
-  const [panel, setPanel] = useState<'chat' | 'docs' | 'ai' | null>(null)
-  const togglePanel = (p: 'chat' | 'docs' | 'ai') => setPanel((cur) => (cur === p ? null : p))
+  const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
+  const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
   const [dockWidth, setDockWidth] = useState(() =>
     Math.round(Math.min(520, window.innerWidth * 0.42)),
   )
@@ -230,14 +228,6 @@ function RoomInner({
           >
             <DocIcon />
           </button>
-          <button
-            className={`ctrl ${panel === 'ai' ? 'ctrl-on' : 'ctrl-off'}`}
-            onClick={() => togglePanel('ai')}
-            aria-label="AI"
-            title="지식 어시스턴트"
-          >
-            <AiIcon />
-          </button>
           <button className="ctrl ctrl-leave" onClick={() => room.disconnect()} aria-label="나가기" title="나가기">
             <LeaveIcon />
           </button>
@@ -254,9 +244,6 @@ function RoomInner({
             <button className={panel === 'docs' ? 'on' : ''} onClick={() => setPanel('docs')}>
               문서
             </button>
-            <button className={panel === 'ai' ? 'on' : ''} onClick={() => setPanel('ai')}>
-              AI
-            </button>
             <button className="icon-btn small dock-close" onClick={() => setPanel(null)} aria-label="닫기">
               <CloseIcon />
             </button>
@@ -264,7 +251,6 @@ function RoomInner({
           <div className="dock-body">
             {panel === 'chat' && <ChatFeed captions={captions} displayLang={lang} myName={name} />}
             {panel === 'docs' && <DocsView groupId={groupId} />}
-            {panel === 'ai' && <AiPanel groupId={groupId} />}
           </div>
         </div>
       )}
