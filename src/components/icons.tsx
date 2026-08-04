@@ -97,3 +97,11 @@ export const CloseIcon = () => (
     <path d="M6 6l12 12M18 6 6 18" />
   </svg>
 )
+
+export const PeopleIcon = () => (
+  <svg {...base}>
+    <circle cx="9" cy="8" r="3.2" />
+    <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
+    <path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 19a5 5 0 0 0-3-4.6" />
+  </svg>
+)

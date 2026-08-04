@@ -8,6 +8,7 @@ import {
   useTracks,
   useTrackToggle,
   useRoomContext,
+  useParticipants,
 } from '@livekit/components-react'
 import { RoomEvent, Track, type RemoteAudioTrack } from 'livekit-client'
 import { Captions } from './Captions'
@@ -25,7 +26,37 @@ import {
   CheckIcon,
   SettingsIcon,
   ChatIcon,
+  PeopleIcon,
+  CloseIcon,
 } from './icons'
+
+function ParticipantsPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const participants = useParticipants()
+  if (!open) return null
+  return (
+    <div className="glass people-panel" role="dialog" aria-label="참가자">
+      <div className="chat-head">
+        <h2>참가자 {participants.length}</h2>
+        <button className="icon-btn small" onClick={onClose} aria-label="닫기">
+          <CloseIcon />
+        </button>
+      </div>
+      <div className="chat-list">
+        {participants.map((p) => (
+          <div key={p.identity} className="roster-item">
+            <span className="roster-name">
+              {p.name || p.identity}
+              {p.isLocal ? ' (나)' : ''}
+            </span>
+            <span className={`roster-mic ${p.isMicrophoneEnabled ? 'on' : 'off'}`}>
+              {p.isMicrophoneEnabled ? <MicIcon /> : <MicOffIcon />}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function Stage() {
   const tracks = useTracks(
@@ -138,6 +169,7 @@ function RoomInner({
   const [speakerVolume, setSpeakerVolume] = useState(100)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
+  const [peopleOpen, setPeopleOpen] = useState(false)
 
   const mic = useLocalMic(room, micDeviceId)
   useSpeakerVolume(speakerVolume / 100)
@@ -176,12 +208,21 @@ function RoomInner({
         >
           <ChatIcon />
         </button>
+        <button
+          className={`ctrl ${peopleOpen ? 'ctrl-on' : 'ctrl-off'}`}
+          onClick={() => setPeopleOpen((v) => !v)}
+          aria-label="참가자"
+          title="참가자"
+        >
+          <PeopleIcon />
+        </button>
         <button className="ctrl ctrl-leave" onClick={() => room.disconnect()} aria-label="나가기" title="나가기">
           <LeaveIcon />
         </button>
       </div>
 
       <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ParticipantsPanel open={peopleOpen} onClose={() => setPeopleOpen(false)} />
       <SettingsSheet
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
