@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@blocknote/core": "^0.52.1",
+    "@blocknote/mantine": "^0.52.1",
+    "@blocknote/react": "^0.52.1",
     "@livekit/components-react": "^2.9.23",
     "@livekit/components-styles": "^1.2.0",
     "@supabase/supabase-js": "^2.112.0",

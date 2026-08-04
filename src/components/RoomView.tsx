@@ -256,7 +256,7 @@ function RoomInner({
           </div>
           <div className="dock-body">
             {panel === 'chat' && <ChatFeed captions={captions} displayLang={lang} myName={name} />}
-            {panel === 'docs' && <DocsView groupId={groupId} />}
+            {panel === 'docs' && <DocsView groupId={groupId} compact />}
           </div>
         </div>
       )}

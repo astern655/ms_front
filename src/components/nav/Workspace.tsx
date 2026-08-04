@@ -132,8 +132,12 @@ export function Workspace({
   }
 
   const joinGroup = async () => {
-    const code = joinCode.trim()
-    if (!code) return
+    const raw = joinCode.trim()
+    if (!raw) return
+    // Accept either a raw code or a pasted invite link (…?invite=CODE).
+    const code = raw.includes('invite=')
+      ? new URLSearchParams(raw.split('?')[1] ?? '').get('invite') || raw
+      : raw
     try {
       const gid = await joinGroupByCode(code)
       const gs = await listGroups()
@@ -215,7 +219,7 @@ export function Workspace({
                   {joining ? (
                     <input
                       className="field create-input"
-                      placeholder="초대 코드"
+                      placeholder="초대 링크 또는 코드"
                       value={joinCode}
                       autoFocus
                       onChange={(e) => setJoinCode(e.target.value)}

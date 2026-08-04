@@ -333,6 +333,90 @@ body {
   overflow-y: auto;
 }
 
+/* --- BlockNote editor --- */
+.blocknote-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  border-radius: 12px;
+}
+
+.blocknote-wrap .bn-container,
+.blocknote-wrap .bn-editor {
+  background: transparent;
+}
+
+/* --- Doc share scope (subtle chip + menu) --- */
+.scope-control {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.scope-chip {
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-2);
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.scope-menu {
+  position: absolute;
+  top: 34px;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 12px;
+  min-width: 130px;
+  background: rgba(28, 28, 34, 0.96);
+}
+
+.scope-menu button {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.scope-menu button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.scope-menu button.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* --- Compact docs (in-call dock): single column --- */
+.docs-view.compact {
+  flex-direction: column;
+}
+
+.docs-compact-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px;
+  flex: 0 0 auto;
+}
+
+.docs-compact-bar .field {
+  flex: 1;
+}
+
+.docs-view.compact .docs-editor {
+  border-radius: 0;
+}
+
 .controlbar {
   position: absolute;
   left: 50%;
@@ -661,6 +745,14 @@ body {
   font-weight: 700;
   letter-spacing: 0.15em;
   font-size: 18px;
+}
+
+.invite-link {
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .team-list {

@@ -8,7 +8,7 @@ import {
   type Team,
   type Member,
 } from '../lib/teams'
-import { CopyIcon, CheckIcon, CloseIcon } from './icons'
+import { CloseIcon } from './icons'
 
 export function GroupSettings({
   group,
@@ -42,9 +42,12 @@ export function GroupSettings({
     }
   }
 
-  const copyCode = async () => {
-    if (!group.invite_code) return
-    await navigator.clipboard.writeText(group.invite_code)
+  const inviteLink = group.invite_code
+    ? `${window.location.origin}/?invite=${group.invite_code}`
+    : ''
+  const copyLink = async () => {
+    if (!inviteLink) return
+    await navigator.clipboard.writeText(inviteLink)
     setCopied(true)
     setTimeout(() => setCopied(false), 1600)
   }
@@ -88,14 +91,14 @@ export function GroupSettings({
         </section>
 
         <section className="setting-group">
-          <div className="section-title">초대 코드</div>
+          <div className="section-title">초대 링크</div>
           <div className="invite-field">
-            <span className="code-inline">{group.invite_code ?? '—'}</span>
-            <button className="icon-btn small" onClick={copyCode} aria-label="코드 복사">
-              {copied ? <CheckIcon /> : <CopyIcon />}
+            <span className="invite-link">{inviteLink || '—'}</span>
+            <button className="btn-mini" onClick={copyLink}>
+              {copied ? '복사됨' : '링크 복사'}
             </button>
           </div>
-          <p className="ws-hint" style={{ padding: 0 }}>이 코드를 공유하면 그룹에 참가할 수 있어요.</p>
+          <p className="ws-hint" style={{ padding: 0 }}>이 링크를 공유하면 그룹에 참가합니다.</p>
         </section>
 
         <section className="setting-group">

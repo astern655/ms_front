@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { listDocs, createDoc, saveDoc, deleteDoc, type Doc, type DocScope } from '../lib/docs'
+import { DocEditor } from './DocEditor'
 
 const SCOPES: { v: DocScope; l: string }[] = [
   { v: 'personal', l: '개인' },
@@ -9,27 +10,28 @@ const SCOPES: { v: DocScope; l: string }[] = [
 ]
 const scopeLabel = (v: DocScope) => SCOPES.find((s) => s.v === v)?.l ?? v
 
-export function DocsView({ groupId }: { groupId: string }) {
+export function DocsView({ groupId, compact = false }: { groupId: string; compact?: boolean }) {
   const [docs, setDocs] = useState<Doc[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
+  const [activeContent, setActiveContent] = useState('')
   const [scope, setScope] = useState<DocScope>('personal')
+  const [scopeMenu, setScopeMenu] = useState(false)
   const [saved, setSaved] = useState(true)
   const [error, setError] = useState('')
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const titleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const open = (d: Doc) => {
     setActiveId(d.id)
     setTitle(d.title)
-    setContent(d.content)
+    setActiveContent(d.content)
     setScope(d.scope)
     setSaved(true)
   }
   const clear = () => {
     setActiveId(null)
     setTitle('')
-    setContent('')
+    setActiveContent('')
   }
 
   useEffect(() => {
@@ -42,31 +44,30 @@ export function DocsView({ groupId }: { groupId: string }) {
       .catch((e) => setError((e as Error).message))
   }, [groupId])
 
-  const schedule = (t: string, c: string) => {
+  const onTitle = (t: string) => {
+    setTitle(t)
     setSaved(false)
-    clearTimeout(timer.current)
-    timer.current = setTimeout(async () => {
+    clearTimeout(titleTimer.current)
+    titleTimer.current = setTimeout(async () => {
       if (!activeId) return
-      try {
-        await saveDoc(activeId, { title: t, content: c })
-        setSaved(true)
-        setDocs((prev) => prev.map((d) => (d.id === activeId ? { ...d, title: t, content: c } : d)))
-      } catch (e) {
-        setError((e as Error).message)
-      }
-    }, 700)
+      await saveDoc(activeId, { title: t }).catch((e) => setError((e as Error).message))
+      setSaved(true)
+      setDocs((prev) => prev.map((d) => (d.id === activeId ? { ...d, title: t } : d)))
+    }, 500)
   }
 
-  // Changing share scope is an explicit decision → save immediately.
+  const onContent = async (json: string) => {
+    if (!activeId) return
+    setSaved(false)
+    await saveDoc(activeId, { content: json }).catch((e) => setError((e as Error).message))
+    setSaved(true)
+  }
+
   const changeScope = async (s: DocScope) => {
     setScope(s)
     if (!activeId) return
-    try {
-      await saveDoc(activeId, { scope: s })
-      setDocs((prev) => prev.map((d) => (d.id === activeId ? { ...d, scope: s } : d)))
-    } catch (e) {
-      setError((e as Error).message)
-    }
+    await saveDoc(activeId, { scope: s }).catch((e) => setError((e as Error).message))
+    setDocs((prev) => prev.map((d) => (d.id === activeId ? { ...d, scope: s } : d)))
   }
 
   const add = async (s: DocScope) => {
@@ -93,29 +94,52 @@ export function DocsView({ groupId }: { groupId: string }) {
   }
 
   return (
-    <div className="docs-view">
-      <aside className="docs-list glass">
-        <button className="btn-mini" onClick={() => add('personal')}>
-          + 새 문서
-        </button>
-        {SCOPES.map((s) => {
-          const items = docs.filter((d) => d.scope === s.v)
-          return (
-            <div key={s.v} className="doc-section">
-              <div className="doc-section-title">{s.l}</div>
-              {items.map((d) => (
-                <button
-                  key={d.id}
-                  className={`doc-item ${d.id === activeId ? 'on' : ''}`}
-                  onClick={() => open(d)}
-                >
-                  {d.title || '제목 없음'}
-                </button>
-              ))}
-            </div>
-          )
-        })}
-      </aside>
+    <div className={`docs-view ${compact ? 'compact' : ''}`}>
+      {compact ? (
+        <div className="docs-compact-bar">
+          <select
+            className="field"
+            value={activeId ?? ''}
+            onChange={(e) => {
+              const d = docs.find((x) => x.id === e.target.value)
+              if (d) open(d)
+            }}
+          >
+            {docs.length === 0 && <option value="">문서 없음</option>}
+            {docs.map((d) => (
+              <option key={d.id} value={d.id}>
+                [{scopeLabel(d.scope)}] {d.title || '제목 없음'}
+              </option>
+            ))}
+          </select>
+          <button className="btn-mini" onClick={() => add('personal')}>
+            + 새
+          </button>
+        </div>
+      ) : (
+        <aside className="docs-list glass">
+          <button className="btn-mini" onClick={() => add('personal')}>
+            + 새 문서
+          </button>
+          {SCOPES.map((s) => {
+            const items = docs.filter((d) => d.scope === s.v)
+            return (
+              <div key={s.v} className="doc-section">
+                <div className="doc-section-title">{s.l}</div>
+                {items.map((d) => (
+                  <button
+                    key={d.id}
+                    className={`doc-item ${d.id === activeId ? 'on' : ''}`}
+                    onClick={() => open(d)}
+                  >
+                    {d.title || '제목 없음'}
+                  </button>
+                ))}
+              </div>
+            )
+          })}
+        </aside>
+      )}
 
       <div className="docs-editor glass">
         {activeId ? (
@@ -124,49 +148,39 @@ export function DocsView({ groupId }: { groupId: string }) {
               <input
                 className="doc-title"
                 value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value)
-                  schedule(e.target.value, content)
-                }}
-                placeholder="제목"
+                onChange={(e) => onTitle(e.target.value)}
+                placeholder="제목 없음"
               />
-              <span className="save-state">{saved ? '저장됨' : '저장 중…'}</span>
-              <button className="danger-btn" onClick={del}>
-                삭제
+              <span className="save-state">{saved ? '저장됨' : '…'}</span>
+              <div className="scope-control">
+                <button className="scope-chip" onClick={() => setScopeMenu((v) => !v)} title="공유 범위">
+                  {scopeLabel(scope)} ▾
+                </button>
+                {scopeMenu && (
+                  <>
+                    <div className="menu-catch" onClick={() => setScopeMenu(false)} />
+                    <div className="scope-menu glass">
+                      {SCOPES.map((s) => (
+                        <button
+                          key={s.v}
+                          className={scope === s.v ? 'on' : ''}
+                          onClick={() => {
+                            changeScope(s.v)
+                            setScopeMenu(false)
+                          }}
+                        >
+                          {s.l}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+              <button className="icon-btn small" onClick={del} aria-label="문서 삭제" title="삭제">
+                ✕
               </button>
             </div>
-
-            <div className="doc-scope">
-              <span className="subtitle" style={{ margin: 0 }}>공유 범위</span>
-              <div className="segmented compact">
-                {SCOPES.map((s) => (
-                  <button
-                    key={s.v}
-                    aria-selected={scope === s.v}
-                    onClick={() => changeScope(s.v)}
-                  >
-                    {s.l}
-                  </button>
-                ))}
-              </div>
-              <span className="scope-hint">
-                {scope === 'personal'
-                  ? '나만 봅니다'
-                  : scope === 'group'
-                    ? '그룹(회사) 전체 공유'
-                    : `${scopeLabel(scope)} 공유`}
-              </span>
-            </div>
-
-            <textarea
-              className="doc-content"
-              value={content}
-              onChange={(e) => {
-                setContent(e.target.value)
-                schedule(title, e.target.value)
-              }}
-              placeholder="내용을 입력하세요 — 자료 정리, 회의 노트, 결정사항…"
-            />
+            <DocEditor key={activeId} content={activeContent} onChange={onContent} />
           </>
         ) : (
           <div className="ws-empty">
