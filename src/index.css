@@ -625,6 +625,13 @@ option {
   background: transparent;
 }
 
+/* Block drag/drop indicator line — accent instead of near-white default (#ddeeff) */
+.prosemirror-dropcursor-block,
+.prosemirror-dropcursor-inline,
+.bn-table-drop-cursor {
+  background-color: var(--accent) !important;
+}
+
 /* --- Doc share scope (subtle chip + menu) --- */
 .scope-control {
   position: relative;
