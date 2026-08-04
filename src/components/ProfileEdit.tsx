@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { updateProfile } from '../lib/teams'
 import { CloseIcon } from './icons'
+import { Select } from './Select'
 
 const JOB_ROLES = ['기획/PM', '디자인', '프론트엔드', '백엔드', 'AI/데이터', '기타']
 
@@ -62,18 +63,13 @@ export function ProfileEdit({
 
         <div className="lang-row">
           <span className="subtitle">직군</span>
-          <select
-            className="field select"
-            style={{ flex: 1, maxWidth: 220 }}
-            value={jobRole}
-            onChange={(e) => setJobRole(e.target.value)}
-          >
-            {JOB_ROLES.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+          <div style={{ flex: 1, maxWidth: 220 }}>
+            <Select
+              value={jobRole}
+              onChange={setJobRole}
+              options={JOB_ROLES.map((r) => ({ value: r, label: r }))}
+            />
+          </div>
         </div>
 
         <button className="btn-primary" disabled={!name.trim() || busy} onClick={save}>

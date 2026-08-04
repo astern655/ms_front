@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { listDocs, createDoc, saveDoc, deleteDoc, type Doc, type DocScope } from '../lib/docs'
 import { DocEditor } from './DocEditor'
+import { Select } from './Select'
 
 const SCOPES: { v: DocScope; l: string }[] = [
   { v: 'personal', l: '개인' },
@@ -97,21 +98,20 @@ export function DocsView({ groupId, compact = false }: { groupId: string; compac
     <div className={`docs-view ${compact ? 'compact' : ''}`}>
       {compact ? (
         <div className="docs-compact-bar">
-          <select
-            className="field"
-            value={activeId ?? ''}
-            onChange={(e) => {
-              const d = docs.find((x) => x.id === e.target.value)
-              if (d) open(d)
-            }}
-          >
-            {docs.length === 0 && <option value="">문서 없음</option>}
-            {docs.map((d) => (
-              <option key={d.id} value={d.id}>
-                [{scopeLabel(d.scope)}] {d.title || '제목 없음'}
-              </option>
-            ))}
-          </select>
+          <div style={{ flex: 1 }}>
+            <Select
+              value={activeId ?? ''}
+              placeholder="문서 없음"
+              onChange={(id) => {
+                const d = docs.find((x) => x.id === id)
+                if (d) open(d)
+              }}
+              options={docs.map((d) => ({
+                value: d.id,
+                label: `[${scopeLabel(d.scope)}] ${d.title || '제목 없음'}`,
+              }))}
+            />
+          </div>
           <button className="btn-mini" onClick={() => add('personal')}>
             + 새
           </button>

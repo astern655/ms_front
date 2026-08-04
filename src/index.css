@@ -133,6 +133,115 @@ option {
   color: #fff;
 }
 
+/* --- Custom select (our UI) --- */
+.select2 {
+  position: relative;
+}
+
+.select2-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+  font-size: 15px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.select2-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select2-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 12px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: rgba(28, 28, 34, 0.96);
+}
+
+.select2-menu button {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 9px 11px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.select2-menu button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.select2-menu button.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+.select2-empty {
+  color: var(--text-2);
+  font-size: 13px;
+  padding: 8px 11px;
+}
+
+/* --- Prevent labels/names from breaking on buttons, cards, tiles --- */
+.tb-brand {
+  white-space: nowrap;
+}
+
+.group-pill {
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.tb-chip {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menu-item {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rc-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lk-participant-name {
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .field:focus {
   outline: none;
   border-color: var(--accent);

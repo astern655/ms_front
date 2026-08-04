@@ -1,6 +1,7 @@
 import { useEffect, useState, type RefObject } from 'react'
 import { useMediaDeviceSelect } from '@livekit/components-react'
 import { MicIcon, SpeakerIcon, VideoIcon, CloseIcon } from './icons'
+import { Select } from './Select'
 
 function DeviceSelect({
   kind,
@@ -14,18 +15,15 @@ function DeviceSelect({
   onChange: (id: string) => void
 }) {
   return (
-    <select
-      className="field select"
+    <Select
       value={activeId}
-      onChange={(e) => onChange(e.target.value)}
-      aria-label={kind}
-    >
-      {devices.map((d, i) => (
-        <option key={d.deviceId} value={d.deviceId}>
-          {d.label || `${kind} ${i + 1}`}
-        </option>
-      ))}
-    </select>
+      onChange={onChange}
+      placeholder={kind}
+      options={devices.map((d, i) => ({
+        value: d.deviceId,
+        label: d.label || `${kind} ${i + 1}`,
+      }))}
+    />
   )
 }
 
