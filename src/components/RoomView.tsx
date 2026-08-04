@@ -157,13 +157,15 @@ function RoomInner({
   const [peopleOpen, setPeopleOpen] = useState(false)
   const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
   const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
-  const [dockWidth, setDockWidth] = useState(400)
+  const [dockWidth, setDockWidth] = useState(() =>
+    Math.round(Math.min(400, window.innerWidth * 0.42)),
+  )
   const startResize = (e: ReactMouseEvent) => {
     e.preventDefault()
     const startX = e.clientX
     const startW = dockWidth
     const onMove = (ev: MouseEvent) =>
-      setDockWidth(Math.min(900, Math.max(300, startW + (startX - ev.clientX))))
+      setDockWidth(Math.min(window.innerWidth * 0.72, Math.max(280, startW + (startX - ev.clientX))))
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
