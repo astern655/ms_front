@@ -158,14 +158,15 @@ function RoomInner({
   const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
   const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
   const [dockWidth, setDockWidth] = useState(() =>
-    Math.round(Math.min(520, window.innerWidth * 0.42)),
+    Math.round(Math.min(440, window.innerWidth * 0.4)),
   )
   const startResize = (e: ReactMouseEvent) => {
     e.preventDefault()
     const startX = e.clientX
     const startW = dockWidth
+    // Dock never dominates: capped at 48% of the window; stage keeps ≥ ~52%.
     const onMove = (ev: MouseEvent) =>
-      setDockWidth(Math.min(window.innerWidth * 0.72, Math.max(280, startW + (startX - ev.clientX))))
+      setDockWidth(Math.min(window.innerWidth * 0.48, Math.max(280, startW + (startX - ev.clientX))))
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
@@ -232,6 +233,19 @@ function RoomInner({
             <LeaveIcon />
           </button>
         </div>
+
+        {/* Sheets overlay only the stage (never the dock), so they follow the video area. */}
+        <ParticipantsSheet open={peopleOpen} onClose={() => setPeopleOpen(false)} />
+        <SettingsSheet
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          micDeviceId={micDeviceId}
+          setMicDeviceId={setMicDeviceId}
+          setGain={mic.setGain}
+          levelRef={mic.levelRef}
+          speakerVolume={speakerVolume}
+          setSpeakerVolume={setSpeakerVolume}
+        />
       </div>
 
       {panel && (
@@ -254,18 +268,6 @@ function RoomInner({
           </div>
         </div>
       )}
-
-      <ParticipantsSheet open={peopleOpen} onClose={() => setPeopleOpen(false)} />
-      <SettingsSheet
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        micDeviceId={micDeviceId}
-        setMicDeviceId={setMicDeviceId}
-        setGain={mic.setGain}
-        levelRef={mic.levelRef}
-        speakerVolume={speakerVolume}
-        setSpeakerVolume={setSpeakerVolume}
-      />
     </>
   )
 }
