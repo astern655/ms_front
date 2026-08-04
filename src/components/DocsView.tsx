@@ -18,6 +18,7 @@ export function DocsView({ groupId, compact = false }: { groupId: string; compac
   const [activeContent, setActiveContent] = useState('')
   const [scope, setScope] = useState<DocScope>('personal')
   const [scopeMenu, setScopeMenu] = useState(false)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [saved, setSaved] = useState(true)
   const [error, setError] = useState('')
   const titleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -81,6 +82,53 @@ export function DocsView({ groupId, compact = false }: { groupId: string; compac
     }
   }
 
+  const addChild = async (parent: Doc) => {
+    try {
+      const d = await createDoc(groupId, parent.scope, parent.id)
+      setDocs((prev) => [d, ...prev])
+      setExpanded((prev) => new Set(prev).add(parent.id))
+      open(d)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const toggleExpand = (id: string) =>
+    setExpanded((prev) => {
+      const n = new Set(prev)
+      if (n.has(id)) n.delete(id)
+      else n.add(id)
+      return n
+    })
+
+  const renderNode = (d: Doc, depth: number) => {
+    const kids = docs.filter((c) => c.parent_id === d.id)
+    const isOpen = expanded.has(d.id)
+    return (
+      <div key={d.id}>
+        <div
+          className={`doc-item tree ${d.id === activeId ? 'on' : ''}`}
+          style={{ paddingLeft: 6 + depth * 14 }}
+        >
+          {kids.length > 0 ? (
+            <button className="doc-caret" onClick={() => toggleExpand(d.id)}>
+              {isOpen ? '▾' : '▸'}
+            </button>
+          ) : (
+            <span className="doc-caret spacer" />
+          )}
+          <button className="doc-title-btn" onClick={() => open(d)}>
+            {d.title || '제목 없음'}
+          </button>
+          <button className="doc-add-child" title="하위 페이지 추가" onClick={() => addChild(d)}>
+            +
+          </button>
+        </div>
+        {isOpen && kids.map((c) => renderNode(c, depth + 1))}
+      </div>
+    )
+  }
+
   const del = async () => {
     if (!activeId) return
     try {
@@ -108,7 +156,7 @@ export function DocsView({ groupId, compact = false }: { groupId: string; compac
               }}
               options={docs.map((d) => ({
                 value: d.id,
-                label: `[${scopeLabel(d.scope)}] ${d.title || '제목 없음'}`,
+                label: `${d.parent_id ? '↳ ' : ''}[${scopeLabel(d.scope)}] ${d.title || '제목 없음'}`,
               }))}
             />
           </div>
@@ -122,19 +170,11 @@ export function DocsView({ groupId, compact = false }: { groupId: string; compac
             + 새 문서
           </button>
           {SCOPES.map((s) => {
-            const items = docs.filter((d) => d.scope === s.v)
+            const roots = docs.filter((d) => d.scope === s.v && !d.parent_id)
             return (
               <div key={s.v} className="doc-section">
                 <div className="doc-section-title">{s.l}</div>
-                {items.map((d) => (
-                  <button
-                    key={d.id}
-                    className={`doc-item ${d.id === activeId ? 'on' : ''}`}
-                    onClick={() => open(d)}
-                  >
-                    {d.title || '제목 없음'}
-                  </button>
-                ))}
+                {roots.map((d) => renderNode(d, 0))}
               </div>
             )
           })}
