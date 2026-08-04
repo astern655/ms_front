@@ -120,6 +120,13 @@ export const DocIcon = () => (
   </svg>
 )
 
+export const AiIcon = () => (
+  <svg {...base}>
+    <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z" />
+    <path d="M18 14l.9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9z" />
+  </svg>
+)
+
 export const LogoutIcon = () => (
   <svg {...base}>
     <path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3" />
