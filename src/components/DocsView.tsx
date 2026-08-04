@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { listDocs, createDoc, saveDoc, deleteDoc, type Doc, type DocScope } from '../lib/docs'
 import { DocEditor } from './DocEditor'
-import { Select } from './Select'
 
 const SCOPES: { v: DocScope; l: string }[] = [
   { v: 'personal', l: '개인' },
@@ -11,7 +10,7 @@ const SCOPES: { v: DocScope; l: string }[] = [
 ]
 const scopeLabel = (v: DocScope) => SCOPES.find((s) => s.v === v)?.l ?? v
 
-export function DocsView({ groupId, compact = false }: { groupId: string; compact?: boolean }) {
+export function DocsView({ groupId }: { groupId: string }) {
   const [docs, setDocs] = useState<Doc[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
@@ -143,43 +142,21 @@ export function DocsView({ groupId, compact = false }: { groupId: string; compac
   }
 
   return (
-    <div className={`docs-view ${compact ? 'compact' : ''}`}>
-      {compact ? (
-        <div className="docs-compact-bar">
-          <div style={{ flex: 1 }}>
-            <Select
-              value={activeId ?? ''}
-              placeholder="문서 없음"
-              onChange={(id) => {
-                const d = docs.find((x) => x.id === id)
-                if (d) open(d)
-              }}
-              options={docs.map((d) => ({
-                value: d.id,
-                label: `${d.parent_id ? '↳ ' : ''}[${scopeLabel(d.scope)}] ${d.title || '제목 없음'}`,
-              }))}
-            />
-          </div>
-          <button className="btn-mini" onClick={() => add('personal')}>
-            + 새
-          </button>
-        </div>
-      ) : (
-        <aside className="docs-list glass">
-          <button className="btn-mini" onClick={() => add('personal')}>
-            + 새 문서
-          </button>
-          {SCOPES.map((s) => {
-            const roots = docs.filter((d) => d.scope === s.v && !d.parent_id)
-            return (
-              <div key={s.v} className="doc-section">
-                <div className="doc-section-title">{s.l}</div>
-                {roots.map((d) => renderNode(d, 0))}
-              </div>
-            )
-          })}
-        </aside>
-      )}
+    <div className="docs-view">
+      <aside className="docs-list glass">
+        <button className="btn-mini" onClick={() => add('personal')}>
+          + 새 문서
+        </button>
+        {SCOPES.map((s) => {
+          const roots = docs.filter((d) => d.scope === s.v && !d.parent_id)
+          return (
+            <div key={s.v} className="doc-section">
+              <div className="doc-section-title">{s.l}</div>
+              {roots.map((d) => renderNode(d, 0))}
+            </div>
+          )
+        })}
+      </aside>
 
       <div className="docs-editor glass">
         {activeId ? (

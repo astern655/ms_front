@@ -291,7 +291,6 @@ export function Workspace({
             key={active.team.id}
             serverUrl={serverUrl}
             token={active.token}
-            code={active.team.name}
             name={profile.name}
             lang={profile.language}
             groupId={active.team.group_id}

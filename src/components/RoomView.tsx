@@ -24,8 +24,6 @@ import {
   VideoOffIcon,
   ScreenIcon,
   LeaveIcon,
-  CopyIcon,
-  CheckIcon,
   SettingsIcon,
   ChatIcon,
   PeopleIcon,
@@ -143,31 +141,11 @@ function Toggle({
   )
 }
 
-function CodePill({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false)
-  const copy = async () => {
-    await navigator.clipboard.writeText(code)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1600)
-  }
-  return (
-    <div className="glass code-pill">
-      <span className="subtitle">코드</span>
-      <b>{code}</b>
-      <button className="icon-btn small" onClick={copy} aria-label="코드 복사">
-        {copied ? <CheckIcon /> : <CopyIcon />}
-      </button>
-    </div>
-  )
-}
-
 function RoomInner({
-  code,
   name,
   lang,
   groupId,
 }: {
-  code: string
   name: string
   lang: string
   groupId: string
@@ -202,7 +180,6 @@ function RoomInner({
     <>
       <div className="stage-area">
         <Stage />
-        <CodePill code={code} />
         <Captions entries={captions} displayLang={lang} />
 
         <div className="glass controlbar">
@@ -271,7 +248,7 @@ function RoomInner({
           </div>
           <div className="dock-body">
             {panel === 'chat' && <ChatFeed captions={captions} displayLang={lang} myName={name} />}
-            {panel === 'docs' && <DocsView groupId={groupId} compact />}
+            {panel === 'docs' && <DocsView groupId={groupId} />}
           </div>
         </div>
       )}
@@ -294,7 +271,6 @@ function RoomInner({
 export function RoomView({
   serverUrl,
   token,
-  code,
   name,
   lang,
   groupId,
@@ -302,7 +278,6 @@ export function RoomView({
 }: {
   serverUrl: string
   token: string
-  code: string
   name: string
   lang: string
   groupId: string
@@ -319,7 +294,7 @@ export function RoomView({
       onDisconnected={onLeave}
     >
       <RoomAudioRenderer />
-      <RoomInner code={code} name={name} lang={lang} groupId={groupId} />
+      <RoomInner name={name} lang={lang} groupId={groupId} />
     </LiveKitRoom>
   )
 }
