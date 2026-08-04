@@ -290,6 +290,7 @@ export function Workspace({
             code={active.team.name}
             name={profile.name}
             lang={profile.language}
+            groupId={active.team.group_id}
             onLeave={() => setActive(null)}
           />
         ) : activeGroup && view === 'docs' ? (

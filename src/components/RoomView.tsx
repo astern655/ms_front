@@ -14,6 +14,7 @@ import { RoomEvent, Track, type RemoteAudioTrack } from 'livekit-client'
 import { Captions } from './Captions'
 import { SettingsSheet } from './SettingsSheet'
 import { ChatPanel } from './ChatPanel'
+import { DocsView } from './DocsView'
 import { useLocalMic } from '../lib/useLocalMic'
 import {
   MicIcon,
@@ -28,6 +29,7 @@ import {
   ChatIcon,
   PeopleIcon,
   CloseIcon,
+  DocIcon,
 } from './icons'
 
 function ParticipantsPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -159,10 +161,12 @@ function RoomInner({
   code,
   name,
   lang,
+  groupId,
 }: {
   code: string
   name: string
   lang: string
+  groupId: string
 }) {
   const room = useRoomContext()
   const [micDeviceId, setMicDeviceId] = useState<string | undefined>(undefined)
@@ -170,6 +174,7 @@ function RoomInner({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [peopleOpen, setPeopleOpen] = useState(false)
+  const [docsOpen, setDocsOpen] = useState(false)
 
   const mic = useLocalMic(room, micDeviceId)
   useSpeakerVolume(speakerVolume / 100)
@@ -216,10 +221,30 @@ function RoomInner({
         >
           <PeopleIcon />
         </button>
+        <button
+          className={`ctrl ${docsOpen ? 'ctrl-on' : 'ctrl-off'}`}
+          onClick={() => setDocsOpen((v) => !v)}
+          aria-label="문서"
+          title="문서"
+        >
+          <DocIcon />
+        </button>
         <button className="ctrl ctrl-leave" onClick={() => room.disconnect()} aria-label="나가기" title="나가기">
           <LeaveIcon />
         </button>
       </div>
+
+      {docsOpen && (
+        <div className="docs-overlay glass">
+          <div className="docs-overlay-head">
+            <span className="subtitle" style={{ margin: 0, fontWeight: 700 }}>문서</span>
+            <button className="icon-btn small" onClick={() => setDocsOpen(false)} aria-label="문서 닫기">
+              <CloseIcon />
+            </button>
+          </div>
+          <DocsView groupId={groupId} />
+        </div>
+      )}
 
       <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
       <ParticipantsPanel open={peopleOpen} onClose={() => setPeopleOpen(false)} />
@@ -243,6 +268,7 @@ export function RoomView({
   code,
   name,
   lang,
+  groupId,
   onLeave,
 }: {
   serverUrl: string
@@ -250,6 +276,7 @@ export function RoomView({
   code: string
   name: string
   lang: string
+  groupId: string
   onLeave: () => void
 }) {
   return (
@@ -263,7 +290,7 @@ export function RoomView({
       onDisconnected={onLeave}
     >
       <RoomAudioRenderer />
-      <RoomInner code={code} name={name} lang={lang} />
+      <RoomInner code={code} name={name} lang={lang} groupId={groupId} />
     </LiveKitRoom>
   )
 }
