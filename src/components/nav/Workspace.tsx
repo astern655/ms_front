@@ -15,7 +15,7 @@ import {
 } from '../../lib/teams'
 import { GroupSettings } from '../GroupSettings'
 import { ProfileEdit } from '../ProfileEdit'
-import { SettingsIcon, EnterIcon } from '../icons'
+import { SettingsIcon } from '../icons'
 
 const serverUrl =
   (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
@@ -45,6 +45,7 @@ export function Workspace({
   const [joinCode, setJoinCode] = useState('')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [groupMenu, setGroupMenu] = useState(false)
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const activeTeamId = active?.team.id ?? null
@@ -170,56 +171,63 @@ export function Workspace({
   }
 
   return (
-    <div className="workspace">
-      <nav className="group-rail glass">
-        {groups.map((g) => (
-          <button
-            key={g.id}
-            className={`group-btn ${g.id === activeGroupId ? 'on' : ''}`}
-            onClick={() => setActiveGroupId(g.id)}
-            title={g.name}
-          >
-            {g.name.slice(0, 2)}
-          </button>
-        ))}
-        <button className="group-btn add" onClick={() => setAddingGroup((v) => !v)} title="그룹 만들기">
-          +
-        </button>
-        <button className="group-btn join" onClick={() => setJoining((v) => !v)} title="그룹 참가">
-          <EnterIcon />
-        </button>
-        <div className="rail-spacer" />
-        <button className="group-btn profile-btn" onClick={() => setProfileOpen(true)} title="프로필 수정">
-          {profile.name.slice(0, 2)}
-        </button>
-        <button className="group-btn signout-mini" onClick={onSignOut} title="로그아웃">
-          ⎋
-        </button>
-      </nav>
-
-      <aside className="team-panel glass">
-        {addingGroup && (
-          <input
-            className="field create-input"
-            placeholder="새 그룹 이름"
-            value={newGroup}
-            onChange={(e) => setNewGroup(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && addGroup()}
-            autoFocus
-          />
-        )}
-        {joining && (
-          <input
-            className="field create-input"
-            placeholder="초대 코드로 참가"
-            value={joinCode}
-            onChange={(e) => setJoinCode(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
-            autoFocus
-          />
-        )}
-        <div className="team-panel-head">
-          <span className="team-panel-title">{activeGroup?.name ?? 'Borderless'}</span>
+    <div className="app-shell">
+      <header className="topbar glass">
+        <div className="tb-left">
+          <span className="tb-brand">Borderless</span>
+          <div className="group-switch">
+            <button className="group-pill" onClick={() => setGroupMenu((v) => !v)}>
+              {activeGroup?.name ?? '그룹 선택'} <span className="caret">▾</span>
+            </button>
+            {groupMenu && (
+              <>
+                <div className="menu-catch" onClick={() => setGroupMenu(false)} />
+                <div className="menu glass">
+                  {groups.map((g) => (
+                    <button
+                      key={g.id}
+                      className={`menu-item ${g.id === activeGroupId ? 'on' : ''}`}
+                      onClick={() => {
+                        setActiveGroupId(g.id)
+                        setGroupMenu(false)
+                      }}
+                    >
+                      {g.name}
+                    </button>
+                  ))}
+                  <div className="menu-sep" />
+                  {addingGroup ? (
+                    <input
+                      className="field create-input"
+                      placeholder="새 그룹 이름"
+                      value={newGroup}
+                      autoFocus
+                      onChange={(e) => setNewGroup(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addGroup()}
+                    />
+                  ) : (
+                    <button className="menu-item" onClick={() => setAddingGroup(true)}>
+                      + 그룹 만들기
+                    </button>
+                  )}
+                  {joining ? (
+                    <input
+                      className="field create-input"
+                      placeholder="초대 코드"
+                      value={joinCode}
+                      autoFocus
+                      onChange={(e) => setJoinCode(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
+                    />
+                  ) : (
+                    <button className="menu-item" onClick={() => setJoining(true)}>
+                      ↳ 코드로 참가
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
           {activeGroup && isOwner && (
             <button className="icon-btn small" onClick={() => setSettingsOpen(true)} title="그룹 설정">
               <SettingsIcon />
@@ -227,49 +235,40 @@ export function Workspace({
           )}
         </div>
 
-        {activeGroup ? (
-          <>
-            <div className="team-list">
-              {teams.map((t) => {
-                const here = presence[t.id] ?? []
-                return (
-                  <div key={t.id} className="team-block">
-                    <button
-                      className={`team-item ${t.id === activeTeamId ? 'on' : ''}`}
-                      onClick={() => enterTeam(t)}
-                    >
-                      <span className="hash">#</span>
-                      <span className="team-name">{t.name}</span>
-                    </button>
-                    {here.length > 0 && (
-                      <ul className="member-list">
-                        {here.map((name, i) => (
-                          <li key={`${name}-${i}`} className="member">
-                            <span className="member-dot" />
-                            {name}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )
-              })}
-              {teams.length === 0 && <p className="ws-hint">팀을 만들어 시작하세요</p>}
-            </div>
-            <input
-              className="field create-input"
-              placeholder="+ 팀 추가"
-              value={newTeam}
-              onChange={(e) => setNewTeam(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && addTeam()}
-            />
-          </>
-        ) : (
-          <p className="ws-hint">왼쪽 +로 그룹을 먼저 만드세요</p>
+        {active && (
+          <div className="tb-teams">
+            {teams.map((t) => {
+              const n = (presence[t.id] ?? []).length
+              return (
+                <button
+                  key={t.id}
+                  className={`tb-chip ${t.id === activeTeamId ? 'on' : ''}`}
+                  onClick={() => enterTeam(t)}
+                >
+                  # {t.name}
+                  {n > 0 && <span className="chip-dot" />}
+                </button>
+              )
+            })}
+          </div>
         )}
-      </aside>
 
-      <main className="ws-main">
+        <div className="tb-right">
+          {active && (
+            <button className="btn-ghost" onClick={() => setActive(null)}>
+              보드
+            </button>
+          )}
+          <button className="avatar sm" onClick={() => setProfileOpen(true)} title="프로필 수정">
+            {profile.name.slice(0, 2)}
+          </button>
+          <button className="icon-btn small" onClick={onSignOut} title="로그아웃">
+            ⎋
+          </button>
+        </div>
+      </header>
+
+      <div className="app-content">
         {active ? (
           <RoomView
             key={active.team.id}
@@ -280,16 +279,48 @@ export function Workspace({
             lang={profile.language}
             onLeave={() => setActive(null)}
           />
+        ) : activeGroup ? (
+          <div className="board">
+            {teams.map((t) => {
+              const here = presence[t.id] ?? []
+              return (
+                <button key={t.id} className="room-card" onClick={() => enterTeam(t)}>
+                  <div className="rc-name">
+                    <span className="hash">#</span>
+                    {t.name}
+                  </div>
+                  <div className="rc-avatars">
+                    {here.slice(0, 5).map((name, i) => (
+                      <span key={`${name}-${i}`} className="avatar sm" title={name}>
+                        {name.slice(0, 2)}
+                      </span>
+                    ))}
+                    {here.length > 5 && <span className="rc-more">+{here.length - 5}</span>}
+                    {here.length === 0 && <span className="rc-empty">비어 있음</span>}
+                  </div>
+                  <div className="rc-foot">{here.length > 0 ? `${here.length}명 참여 중` : '입장하기'}</div>
+                </button>
+              )
+            })}
+            <div className="room-card new">
+              <div className="rc-name">새 팀</div>
+              <input
+                className="field create-input"
+                placeholder="팀 이름 + Enter"
+                value={newTeam}
+                onChange={(e) => setNewTeam(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addTeam()}
+              />
+            </div>
+          </div>
         ) : (
           <div className="ws-empty">
             <h1 className="brand">Borderless</h1>
-            <p className="subtitle">
-              {activeGroup ? '팀을 선택해 회의에 입장하세요' : '그룹을 만들어 팀을 구성하세요'}
-            </p>
-            {error && <p className="error">{error}</p>}
+            <p className="subtitle">상단에서 그룹을 만들거나 코드로 참가하세요</p>
           </div>
         )}
-      </main>
+        {error && <p className="error board-error">{error}</p>}
+      </div>
 
       {settingsOpen && activeGroup && (
         <GroupSettings
