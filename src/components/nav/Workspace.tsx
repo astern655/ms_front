@@ -16,7 +16,7 @@ import {
 import { GroupSettings } from '../GroupSettings'
 import { ProfileEdit } from '../ProfileEdit'
 import { DocsView } from '../DocsView'
-import { SettingsIcon } from '../icons'
+import { SettingsIcon, LogoutIcon } from '../icons'
 
 const serverUrl =
   (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
@@ -280,7 +280,7 @@ export function Workspace({
             {profile.name.slice(0, 2)}
           </button>
           <button className="icon-btn small" onClick={onSignOut} title="로그아웃">
-            ⎋
+            <LogoutIcon />
           </button>
         </div>
       </header>

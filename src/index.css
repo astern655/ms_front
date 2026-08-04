@@ -350,6 +350,7 @@ option {
   position: relative;
   flex: 0 0 auto;
   width: 360px;
+  max-width: calc(100vw - 96px);
   display: flex;
   flex-direction: column;
   border-left: 1px solid rgba(255, 255, 255, 0.12);
@@ -769,6 +770,9 @@ option {
   font-weight: 700;
   flex: 0 0 auto;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  line-height: 1;
 }
 
 .avatar.lg {

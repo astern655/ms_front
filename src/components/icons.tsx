@@ -119,3 +119,10 @@ export const DocIcon = () => (
     <path d="M14 3v5h5M9 13h6M9 17h6" />
   </svg>
 )
+
+export const LogoutIcon = () => (
+  <svg {...base}>
+    <path d="M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3" />
+    <path d="M16 17l5-5-5-5M21 12H9" />
+  </svg>
+)
