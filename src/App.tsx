@@ -54,8 +54,14 @@ export default function App() {
     )
   return (
     <Workspace
-      profile={{ id: profile.id, name: profile.name, language: profile.language }}
+      profile={{
+        id: profile.id,
+        name: profile.name,
+        language: profile.language,
+        job_role: profile.job_role,
+      }}
       onSignOut={() => supabase.auth.signOut()}
+      onProfileChange={(p) => setProfile((prev) => (prev ? { ...prev, ...p } : prev))}
     />
   )
 }

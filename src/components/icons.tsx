@@ -105,3 +105,10 @@ export const PeopleIcon = () => (
     <path d="M16 5.2a3 3 0 0 1 0 5.6M17.5 19a5 5 0 0 0-3-4.6" />
   </svg>
 )
+
+export const EnterIcon = () => (
+  <svg {...base}>
+    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+    <path d="M10 17l5-5-5-5M15 12H3" />
+  </svg>
+)

@@ -9,17 +9,29 @@ import {
   listTeams,
   createTeam,
   ensureTeamMembership,
+  joinGroupByCode,
   type Group,
   type Team,
 } from '../../lib/teams'
+import { GroupSettings } from '../GroupSettings'
+import { ProfileEdit } from '../ProfileEdit'
+import { SettingsIcon, EnterIcon } from '../icons'
 
 const serverUrl =
   (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
   'wss://ms-hack-ly6rx40h.livekit.cloud'
 
-type Profile = { id: string; name: string; language: string }
+type Profile = { id: string; name: string; language: string; job_role?: string | null }
 
-export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut: () => void }) {
+export function Workspace({
+  profile,
+  onSignOut,
+  onProfileChange,
+}: {
+  profile: Profile
+  onSignOut: () => void
+  onProfileChange: (p: { name: string; language: string; job_role: string }) => void
+}) {
   const [groups, setGroups] = useState<Group[]>([])
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
@@ -29,6 +41,10 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
   const [newGroup, setNewGroup] = useState('')
   const [newTeam, setNewTeam] = useState('')
   const [addingGroup, setAddingGroup] = useState(false)
+  const [joining, setJoining] = useState(false)
+  const [joinCode, setJoinCode] = useState('')
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const activeTeamId = active?.team.id ?? null
@@ -84,6 +100,7 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
   }, [activeTeamId, profile.name])
 
   const activeGroup = groups.find((g) => g.id === activeGroupId) ?? null
+  const isOwner = !!activeGroup && activeGroup.owner_id === profile.id
 
   const addGroup = async () => {
     const name = newGroup.trim()
@@ -106,6 +123,31 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
       const t = await createTeam(activeGroupId, name, profile.id)
       setTeams((prev) => [...prev, t])
       setNewTeam('')
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const joinGroup = async () => {
+    const code = joinCode.trim()
+    if (!code) return
+    try {
+      const gid = await joinGroupByCode(code)
+      const gs = await listGroups()
+      setGroups(gs)
+      setActiveGroupId(gid)
+      setJoinCode('')
+      setJoining(false)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const refreshAfterSettings = async () => {
+    try {
+      const gs = await listGroups()
+      setGroups(gs)
+      if (activeGroupId) setTeams(await listTeams(activeGroupId))
     } catch (e) {
       setError((e as Error).message)
     }
@@ -143,7 +185,13 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
         <button className="group-btn add" onClick={() => setAddingGroup((v) => !v)} title="그룹 만들기">
           +
         </button>
+        <button className="group-btn join" onClick={() => setJoining((v) => !v)} title="그룹 참가">
+          <EnterIcon />
+        </button>
         <div className="rail-spacer" />
+        <button className="group-btn profile-btn" onClick={() => setProfileOpen(true)} title="프로필 수정">
+          {profile.name.slice(0, 2)}
+        </button>
         <button className="group-btn signout-mini" onClick={onSignOut} title="로그아웃">
           ⎋
         </button>
@@ -160,7 +208,24 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
             autoFocus
           />
         )}
-        <div className="team-panel-head">{activeGroup?.name ?? 'Borderless'}</div>
+        {joining && (
+          <input
+            className="field create-input"
+            placeholder="초대 코드로 참가"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
+            autoFocus
+          />
+        )}
+        <div className="team-panel-head">
+          <span className="team-panel-title">{activeGroup?.name ?? 'Borderless'}</span>
+          {activeGroup && isOwner && (
+            <button className="icon-btn small" onClick={() => setSettingsOpen(true)} title="그룹 설정">
+              <SettingsIcon />
+            </button>
+          )}
+        </div>
 
         {activeGroup ? (
           <>
@@ -225,6 +290,23 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
           </div>
         )}
       </main>
+
+      {settingsOpen && activeGroup && (
+        <GroupSettings
+          group={activeGroup}
+          teams={teams}
+          meId={profile.id}
+          onClose={() => setSettingsOpen(false)}
+          onChanged={refreshAfterSettings}
+        />
+      )}
+      {profileOpen && (
+        <ProfileEdit
+          profile={profile}
+          onClose={() => setProfileOpen(false)}
+          onSaved={onProfileChange}
+        />
+      )}
     </div>
   )
 }

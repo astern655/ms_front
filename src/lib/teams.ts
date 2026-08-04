@@ -1,7 +1,8 @@
 import { supabase } from './supabase'
 
-export type Group = { id: string; name: string; owner_id: string }
+export type Group = { id: string; name: string; owner_id: string; invite_code: string | null }
 export type Team = { id: string; group_id: string; name: string }
+export type Member = { user_id: string; name: string; job_role: string | null }
 
 export async function listGroups(): Promise<Group[]> {
   const { data, error } = await supabase.from('groups').select('*').order('created_at')
@@ -49,4 +50,49 @@ export async function ensureTeamMembership(teamId: string, userId: string): Prom
       { team_id: teamId, user_id: userId, role: 'member' },
       { onConflict: 'team_id,user_id', ignoreDuplicates: true },
     )
+}
+
+export async function getGroupMembers(groupId: string): Promise<Member[]> {
+  const { data, error } = await supabase
+    .from('group_members')
+    .select('user_id, profiles(name, job_role)')
+    .eq('group_id', groupId)
+  if (error) throw error
+  return (data ?? []).map((r) => {
+    const p = (r as { profiles?: { name?: string; job_role?: string | null } }).profiles
+    return { user_id: (r as { user_id: string }).user_id, name: p?.name ?? '?', job_role: p?.job_role ?? null }
+  })
+}
+
+export async function removeGroupMember(groupId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('group_members')
+    .delete()
+    .eq('group_id', groupId)
+    .eq('user_id', userId)
+  if (error) throw error
+}
+
+export async function renameGroup(groupId: string, name: string): Promise<void> {
+  const { error } = await supabase.from('groups').update({ name }).eq('id', groupId)
+  if (error) throw error
+}
+
+export async function deleteTeam(teamId: string): Promise<void> {
+  const { error } = await supabase.from('teams').delete().eq('id', teamId)
+  if (error) throw error
+}
+
+export async function joinGroupByCode(code: string): Promise<string> {
+  const { data, error } = await supabase.rpc('join_group_by_code', { code: code.trim() })
+  if (error) throw error
+  return data as string
+}
+
+export async function updateProfile(
+  id: string,
+  fields: { name: string; language: string; job_role: string },
+): Promise<void> {
+  const { error } = await supabase.from('profiles').update(fields).eq('id', id)
+  if (error) throw error
 }
