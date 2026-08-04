@@ -1,11 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
-import { listDocs, createDoc, saveDoc, deleteDoc, type Doc } from '../lib/docs'
+import { listDocs, createDoc, saveDoc, deleteDoc, type Doc, type DocScope } from '../lib/docs'
+
+const SCOPES: { v: DocScope; l: string }[] = [
+  { v: 'personal', l: '개인' },
+  { v: 'team', l: '팀' },
+  { v: 'meeting', l: '회의' },
+  { v: 'group', l: '그룹 전체' },
+]
+const scopeLabel = (v: DocScope) => SCOPES.find((s) => s.v === v)?.l ?? v
 
 export function DocsView({ groupId }: { groupId: string }) {
   const [docs, setDocs] = useState<Doc[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [scope, setScope] = useState<DocScope>('personal')
   const [saved, setSaved] = useState(true)
   const [error, setError] = useState('')
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -14,7 +23,13 @@ export function DocsView({ groupId }: { groupId: string }) {
     setActiveId(d.id)
     setTitle(d.title)
     setContent(d.content)
+    setScope(d.scope)
     setSaved(true)
+  }
+  const clear = () => {
+    setActiveId(null)
+    setTitle('')
+    setContent('')
   }
 
   useEffect(() => {
@@ -22,11 +37,7 @@ export function DocsView({ groupId }: { groupId: string }) {
       .then((ds) => {
         setDocs(ds)
         if (ds[0]) open(ds[0])
-        else {
-          setActiveId(null)
-          setTitle('')
-          setContent('')
-        }
+        else clear()
       })
       .catch((e) => setError((e as Error).message))
   }, [groupId])
@@ -46,9 +57,21 @@ export function DocsView({ groupId }: { groupId: string }) {
     }, 700)
   }
 
-  const add = async () => {
+  // Changing share scope is an explicit decision → save immediately.
+  const changeScope = async (s: DocScope) => {
+    setScope(s)
+    if (!activeId) return
     try {
-      const d = await createDoc(groupId)
+      await saveDoc(activeId, { scope: s })
+      setDocs((prev) => prev.map((d) => (d.id === activeId ? { ...d, scope: s } : d)))
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const add = async (s: DocScope) => {
+    try {
+      const d = await createDoc(groupId, s)
       setDocs((prev) => [d, ...prev])
       open(d)
     } catch (e) {
@@ -63,11 +86,7 @@ export function DocsView({ groupId }: { groupId: string }) {
       const rest = docs.filter((d) => d.id !== activeId)
       setDocs(rest)
       if (rest[0]) open(rest[0])
-      else {
-        setActiveId(null)
-        setTitle('')
-        setContent('')
-      }
+      else clear()
     } catch (e) {
       setError((e as Error).message)
     }
@@ -76,19 +95,26 @@ export function DocsView({ groupId }: { groupId: string }) {
   return (
     <div className="docs-view">
       <aside className="docs-list glass">
-        <button className="btn-mini" onClick={add}>
+        <button className="btn-mini" onClick={() => add('personal')}>
           + 새 문서
         </button>
-        {docs.map((d) => (
-          <button
-            key={d.id}
-            className={`doc-item ${d.id === activeId ? 'on' : ''}`}
-            onClick={() => open(d)}
-          >
-            {d.title || '제목 없음'}
-          </button>
-        ))}
-        {docs.length === 0 && <p className="ws-hint">문서를 만들어 자료·회의를 정리하세요</p>}
+        {SCOPES.map((s) => {
+          const items = docs.filter((d) => d.scope === s.v)
+          return (
+            <div key={s.v} className="doc-section">
+              <div className="doc-section-title">{s.l}</div>
+              {items.map((d) => (
+                <button
+                  key={d.id}
+                  className={`doc-item ${d.id === activeId ? 'on' : ''}`}
+                  onClick={() => open(d)}
+                >
+                  {d.title || '제목 없음'}
+                </button>
+              ))}
+            </div>
+          )
+        })}
       </aside>
 
       <div className="docs-editor glass">
@@ -109,6 +135,29 @@ export function DocsView({ groupId }: { groupId: string }) {
                 삭제
               </button>
             </div>
+
+            <div className="doc-scope">
+              <span className="subtitle" style={{ margin: 0 }}>공유 범위</span>
+              <div className="segmented compact">
+                {SCOPES.map((s) => (
+                  <button
+                    key={s.v}
+                    aria-selected={scope === s.v}
+                    onClick={() => changeScope(s.v)}
+                  >
+                    {s.l}
+                  </button>
+                ))}
+              </div>
+              <span className="scope-hint">
+                {scope === 'personal'
+                  ? '나만 봅니다'
+                  : scope === 'group'
+                    ? '그룹(회사) 전체 공유'
+                    : `${scopeLabel(scope)} 공유`}
+              </span>
+            </div>
+
             <textarea
               className="doc-content"
               value={content}

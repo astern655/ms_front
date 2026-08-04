@@ -1,10 +1,13 @@
 import { supabase } from './supabase'
 
+export type DocScope = 'personal' | 'team' | 'meeting' | 'group'
+
 export type Doc = {
   id: string
   group_id: string
   title: string
   content: string
+  scope: DocScope
   updated_at: string
 }
 
@@ -18,15 +21,19 @@ export async function listDocs(groupId: string): Promise<Doc[]> {
   return data as Doc[]
 }
 
-export async function createDoc(groupId: string): Promise<Doc> {
-  const { data, error } = await supabase.from('docs').insert({ group_id: groupId }).select().single()
+export async function createDoc(groupId: string, scope: DocScope = 'personal'): Promise<Doc> {
+  const { data, error } = await supabase
+    .from('docs')
+    .insert({ group_id: groupId, scope })
+    .select()
+    .single()
   if (error) throw error
   return data as Doc
 }
 
 export async function saveDoc(
   id: string,
-  fields: { title?: string; content?: string },
+  fields: { title?: string; content?: string; scope?: DocScope },
 ): Promise<void> {
   const { error } = await supabase
     .from('docs')

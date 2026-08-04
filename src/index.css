@@ -296,6 +296,43 @@ body {
   padding: 12px;
 }
 
+.doc-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 10px;
+}
+
+.doc-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-2);
+  text-transform: uppercase;
+  padding: 4px 10px;
+}
+
+.doc-scope {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.scope-hint {
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
 .controlbar {
   position: absolute;
   left: 50%;

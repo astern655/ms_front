@@ -33,22 +33,32 @@ import {
   DocIcon,
 } from './icons'
 
-function RosterBody() {
+function ParticipantsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const participants = useParticipants()
+  if (!open) return null
   return (
-    <div className="dock-fill">
-      <div className="chat-list roster">
-        {participants.map((p) => (
-          <div key={p.identity} className="roster-item">
-            <span className="roster-name">
-              {p.name || p.identity}
-              {p.isLocal ? ' (나)' : ''}
-            </span>
-            <span className={`roster-mic ${p.isMicrophoneEnabled ? 'on' : 'off'}`}>
-              {p.isMicrophoneEnabled ? <MicIcon /> : <MicOffIcon />}
-            </span>
-          </div>
-        ))}
+    <div className="sheet-backdrop" onClick={onClose}>
+      <div className="glass sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="참가자">
+        <div className="sheet-grabber" />
+        <div className="sheet-head">
+          <h2>참가자 {participants.length}</h2>
+          <button className="icon-btn small" onClick={onClose} aria-label="닫기">
+            <CloseIcon />
+          </button>
+        </div>
+        <div className="roster">
+          {participants.map((p) => (
+            <div key={p.identity} className="roster-item">
+              <span className="roster-name">
+                {p.name || p.identity}
+                {p.isLocal ? ' (나)' : ''}
+              </span>
+              <span className={`roster-mic ${p.isMicrophoneEnabled ? 'on' : 'off'}`}>
+                {p.isMicrophoneEnabled ? <MicIcon /> : <MicOffIcon />}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -166,8 +176,9 @@ function RoomInner({
   const [micDeviceId, setMicDeviceId] = useState<string | undefined>(undefined)
   const [speakerVolume, setSpeakerVolume] = useState(100)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [panel, setPanel] = useState<'chat' | 'docs' | 'people' | null>(null)
-  const togglePanel = (p: 'chat' | 'docs' | 'people') => setPanel((cur) => (cur === p ? null : p))
+  const [peopleOpen, setPeopleOpen] = useState(false)
+  const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
+  const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
 
   const mic = useLocalMic(room, micDeviceId)
   useSpeakerVolume(speakerVolume / 100)
@@ -209,8 +220,8 @@ function RoomInner({
             <ChatIcon />
           </button>
           <button
-            className={`ctrl ${panel === 'people' ? 'ctrl-on' : 'ctrl-off'}`}
-            onClick={() => togglePanel('people')}
+            className={`ctrl ${peopleOpen ? 'ctrl-on' : 'ctrl-off'}`}
+            onClick={() => setPeopleOpen((v) => !v)}
             aria-label="참가자"
             title="참가자"
           >
@@ -239,9 +250,6 @@ function RoomInner({
             <button className={panel === 'docs' ? 'on' : ''} onClick={() => setPanel('docs')}>
               문서
             </button>
-            <button className={panel === 'people' ? 'on' : ''} onClick={() => setPanel('people')}>
-              참가자
-            </button>
             <button className="icon-btn small dock-close" onClick={() => setPanel(null)} aria-label="닫기">
               <CloseIcon />
             </button>
@@ -249,11 +257,11 @@ function RoomInner({
           <div className="dock-body">
             {panel === 'chat' && <ChatFeed captions={captions} displayLang={lang} myName={name} />}
             {panel === 'docs' && <DocsView groupId={groupId} />}
-            {panel === 'people' && <RosterBody />}
           </div>
         </div>
       )}
 
+      <ParticipantsSheet open={peopleOpen} onClose={() => setPeopleOpen(false)} />
       <SettingsSheet
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
