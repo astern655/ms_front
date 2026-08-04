@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase, type Profile } from './lib/supabase'
 import { AuthScreen } from './components/auth/AuthScreen'
 import { Onboarding } from './components/auth/Onboarding'
-import { MeetingApp } from './components/MeetingApp'
+import { Workspace } from './components/nav/Workspace'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -52,5 +52,10 @@ export default function App() {
         onDone={setProfile}
       />
     )
-  return <MeetingApp onSignOut={() => supabase.auth.signOut()} />
+  return (
+    <Workspace
+      profile={{ id: profile.id, name: profile.name, language: profile.language }}
+      onSignOut={() => supabase.auth.signOut()}
+    />
+  )
 }

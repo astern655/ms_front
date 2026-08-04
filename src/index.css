@@ -301,6 +301,137 @@ body {
   cursor: pointer;
 }
 
+/* --- Workspace (Discord-like nav) --- */
+.workspace {
+  display: flex;
+  height: 100dvh;
+}
+
+.group-rail {
+  width: 76px;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+}
+
+.group-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: border-radius 0.15s ease, background 0.2s ease;
+}
+
+.group-btn:hover {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.group-btn.on {
+  background: var(--accent);
+  border-color: transparent;
+  color: #fff;
+}
+
+.group-btn.add {
+  color: var(--accent);
+  font-size: 22px;
+}
+
+.rail-spacer {
+  flex: 1;
+}
+
+.signout-mini {
+  font-size: 18px;
+  color: var(--text-2);
+}
+
+.team-panel {
+  width: 240px;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 8px;
+}
+
+.team-panel-head {
+  font-size: 15px;
+  font-weight: 700;
+  padding: 6px 8px;
+}
+
+.team-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.team-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.team-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.hash {
+  color: var(--text-2);
+  font-weight: 700;
+}
+
+.create-input {
+  padding: 9px 12px;
+  font-size: 14px;
+}
+
+.ws-hint {
+  color: var(--text-2);
+  font-size: 13px;
+  padding: 8px 10px;
+  margin: 0;
+}
+
+.ws-main {
+  flex: 1;
+  position: relative;
+}
+
+.ws-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
 .segmented.compact {
   flex: 1;
   max-width: 220px;
