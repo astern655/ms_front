@@ -288,6 +288,19 @@ body {
   margin: 0;
 }
 
+.signout {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 20;
+  padding: 8px 16px;
+  border-radius: 14px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .segmented.compact {
   flex: 1;
   max-width: 220px;

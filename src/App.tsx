@@ -1,52 +1,56 @@
-import { useState } from 'react'
-import { JoinScreen } from './components/JoinScreen'
-import { RoomView } from './components/RoomView'
-import { API_BASE } from './lib/api'
-
-const serverUrl =
-  (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
-  'wss://ms-hack-ly6rx40h.livekit.cloud'
+import { useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { supabase, type Profile } from './lib/supabase'
+import { AuthScreen } from './components/auth/AuthScreen'
+import { Onboarding } from './components/auth/Onboarding'
+import { MeetingApp } from './components/MeetingApp'
 
 export default function App() {
-  const [session, setSession] = useState<{
-    token: string
-    code: string
-    name: string
-    lang: string
-  } | null>(null)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState('')
+  const [session, setSession] = useState<Session | null>(null)
+  const [ready, setReady] = useState(false)
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [profileChecked, setProfileChecked] = useState(false)
 
-  const join = async ({ code, name, lang }: { code: string; name: string; lang: string }) => {
-    setError('')
-    setBusy(true)
-    try {
-      const res = await fetch(
-        `${API_BASE}/api/token?room=${encodeURIComponent(code)}&identity=${encodeURIComponent(name)}`,
-      )
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'token error')
-      if (!serverUrl) throw new Error('VITE_LIVEKIT_URL not set in .env.local')
-      setSession({ token: data.token, code, name, lang })
-    } catch (e) {
-      setError((e as Error).message)
-    } finally {
-      setBusy(false)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setReady(true)
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s)
+      if (!s) setProfile(null)
+    })
+    return () => sub.subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    if (!session) {
+      setProfile(null)
+      setProfileChecked(false)
+      return
     }
-  }
+    setProfileChecked(false)
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setProfile((data as Profile) ?? null)
+        setProfileChecked(true)
+      })
+  }, [session])
 
-  if (session) {
+  if (!ready) return null
+  if (!session) return <AuthScreen />
+  if (!profileChecked) return null
+  if (!profile)
     return (
-      <RoomView
-        serverUrl={serverUrl!}
-        token={session.token}
-        code={session.code}
-        name={session.name}
-        lang={session.lang}
-        onLeave={() => setSession(null)}
+      <Onboarding
+        userId={session.user.id}
+        defaultName={session.user.email?.split('@')[0]}
+        onDone={setProfile}
       />
     )
-  }
-
-  return <JoinScreen onJoin={join} busy={busy} error={error} />
+  return <MeetingApp onSignOut={() => supabase.auth.signOut()} />
 }
