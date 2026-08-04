@@ -78,7 +78,7 @@ export function GroupSettings({
         </div>
 
         <section className="setting-group">
-          <div className="setting-label">그룹 이름</div>
+          <div className="section-title">그룹 이름</div>
           <div className="row">
             <input className="field" style={{ flex: 1 }} value={name} onChange={(e) => setName(e.target.value)} />
             <button className="btn-mini" onClick={saveName} disabled={!name.trim() || name === group.name}>
@@ -88,8 +88,8 @@ export function GroupSettings({
         </section>
 
         <section className="setting-group">
-          <div className="setting-label">초대 코드</div>
-          <div className="list-row">
+          <div className="section-title">초대 코드</div>
+          <div className="invite-field">
             <span className="code-inline">{group.invite_code ?? '—'}</span>
             <button className="icon-btn small" onClick={copyCode} aria-label="코드 복사">
               {copied ? <CheckIcon /> : <CopyIcon />}
@@ -99,12 +99,16 @@ export function GroupSettings({
         </section>
 
         <section className="setting-group">
-          <div className="setting-label">멤버 ({members.length})</div>
+          <div className="section-title">멤버 · {members.length}</div>
           {members.map((m) => (
             <div key={m.user_id} className="list-row">
-              <span>
-                {m.name}
-                {m.user_id === group.owner_id ? ' · 대표' : m.job_role ? ` · ${m.job_role}` : ''}
+              <span className="member-row-left">
+                <span className="avatar sm">{(m.name || '?').slice(0, 2)}</span>
+                <span className="name">
+                  {m.name}
+                  {m.job_role && m.user_id !== group.owner_id ? ` · ${m.job_role}` : ''}
+                </span>
+                {m.user_id === group.owner_id && <span className="role-chip">대표</span>}
               </span>
               {m.user_id !== group.owner_id && m.user_id !== meId && (
                 <button className="danger-btn" onClick={() => kick(m.user_id)}>
@@ -116,10 +120,13 @@ export function GroupSettings({
         </section>
 
         <section className="setting-group">
-          <div className="setting-label">팀 ({teams.length})</div>
+          <div className="section-title">팀 · {teams.length}</div>
           {teams.map((t) => (
             <div key={t.id} className="list-row">
-              <span># {t.name}</span>
+              <span className="member-row-left">
+                <span className="hash">#</span>
+                <span className="name">{t.name}</span>
+              </span>
               <button className="danger-btn" onClick={() => removeTeam(t.id)}>
                 삭제
               </button>

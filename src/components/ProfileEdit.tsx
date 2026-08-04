@@ -44,6 +44,8 @@ export function ProfileEdit({
           </button>
         </div>
 
+        <div className="avatar lg">{(name || '?').slice(0, 2)}</div>
+
         <input className="field" placeholder="이름" value={name} onChange={(e) => setName(e.target.value)} />
 
         <div className="lang-row">
