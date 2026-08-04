@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { RealtimeChannel } from '@supabase/supabase-js'
+import { supabase } from '../../lib/supabase'
 import { RoomView } from '../RoomView'
 import { API_BASE } from '../../lib/api'
 import {
@@ -22,10 +24,16 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
   const [active, setActive] = useState<{ team: Team; token: string } | null>(null)
+  const [presence, setPresence] = useState<Record<string, string[]>>({})
   const [error, setError] = useState('')
   const [newGroup, setNewGroup] = useState('')
   const [newTeam, setNewTeam] = useState('')
   const [addingGroup, setAddingGroup] = useState(false)
+
+  const channelRef = useRef<RealtimeChannel | null>(null)
+  const activeTeamId = active?.team.id ?? null
+  const activeTeamRef = useRef<string | null>(null)
+  activeTeamRef.current = activeTeamId
 
   useEffect(() => {
     listGroups()
@@ -45,6 +53,35 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
       .then(setTeams)
       .catch((e) => setError((e as Error).message))
   }, [activeGroupId])
+
+  // Live presence per group: who is currently in which team.
+  useEffect(() => {
+    if (!activeGroupId) return
+    const ch = supabase.channel(`group:${activeGroupId}`, {
+      config: { presence: { key: profile.id } },
+    })
+    ch.on('presence', { event: 'sync' }, () => {
+      const state = ch.presenceState() as Record<string, { teamId: string | null; name: string }[]>
+      const map: Record<string, string[]> = {}
+      for (const metas of Object.values(state)) {
+        for (const m of metas) if (m.teamId) (map[m.teamId] ??= []).push(m.name)
+      }
+      setPresence(map)
+    })
+    ch.subscribe((status) => {
+      if (status === 'SUBSCRIBED') ch.track({ teamId: activeTeamRef.current, name: profile.name })
+    })
+    channelRef.current = ch
+    return () => {
+      supabase.removeChannel(ch)
+      channelRef.current = null
+    }
+  }, [activeGroupId, profile.id, profile.name])
+
+  // Broadcast which team I'm in whenever it changes.
+  useEffect(() => {
+    channelRef.current?.track({ teamId: activeTeamId, name: profile.name })
+  }, [activeTeamId, profile.name])
 
   const activeGroup = groups.find((g) => g.id === activeGroupId) ?? null
 
@@ -90,19 +127,6 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
     }
   }
 
-  if (active) {
-    return (
-      <RoomView
-        serverUrl={serverUrl}
-        token={active.token}
-        code={active.team.name}
-        name={profile.name}
-        lang={profile.language}
-        onLeave={() => setActive(null)}
-      />
-    )
-  }
-
   return (
     <div className="workspace">
       <nav className="group-rail glass">
@@ -141,23 +165,33 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
         {activeGroup ? (
           <>
             <div className="team-list">
-              {teams.map((t) => (
-                <button key={t.id} className="team-item" onClick={() => enterTeam(t)}>
-                  <span className="hash">#</span>
-                  {t.name}
-                </button>
-              ))}
+              {teams.map((t) => {
+                const here = presence[t.id] ?? []
+                return (
+                  <button
+                    key={t.id}
+                    className={`team-item ${t.id === activeTeamId ? 'on' : ''}`}
+                    onClick={() => enterTeam(t)}
+                  >
+                    <span className="hash">#</span>
+                    <span className="team-name">{t.name}</span>
+                    {here.length > 0 && (
+                      <span className="pcount" title={here.join(', ')}>
+                        {here.length}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
               {teams.length === 0 && <p className="ws-hint">팀을 만들어 시작하세요</p>}
             </div>
-            <div className="team-create">
-              <input
-                className="field create-input"
-                placeholder="+ 팀 추가"
-                value={newTeam}
-                onChange={(e) => setNewTeam(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addTeam()}
-              />
-            </div>
+            <input
+              className="field create-input"
+              placeholder="+ 팀 추가"
+              value={newTeam}
+              onChange={(e) => setNewTeam(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addTeam()}
+            />
           </>
         ) : (
           <p className="ws-hint">왼쪽 +로 그룹을 먼저 만드세요</p>
@@ -165,13 +199,25 @@ export function Workspace({ profile, onSignOut }: { profile: Profile; onSignOut:
       </aside>
 
       <main className="ws-main">
-        <div className="ws-empty">
-          <h1 className="brand">Borderless</h1>
-          <p className="subtitle">
-            {activeGroup ? '팀을 선택해 회의에 입장하세요' : '그룹을 만들어 팀을 구성하세요'}
-          </p>
-          {error && <p className="error">{error}</p>}
-        </div>
+        {active ? (
+          <RoomView
+            key={active.team.id}
+            serverUrl={serverUrl}
+            token={active.token}
+            code={active.team.name}
+            name={profile.name}
+            lang={profile.language}
+            onLeave={() => setActive(null)}
+          />
+        ) : (
+          <div className="ws-empty">
+            <h1 className="brand">Borderless</h1>
+            <p className="subtitle">
+              {activeGroup ? '팀을 선택해 회의에 입장하세요' : '그룹을 만들어 팀을 구성하세요'}
+            </p>
+            {error && <p className="error">{error}</p>}
+          </div>
+        )}
       </main>
     </div>
   )
