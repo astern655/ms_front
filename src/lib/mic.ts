@@ -39,8 +39,10 @@ export function startMic(
         ts: Date.now(),
       }
       // Copy into an ArrayBuffer-backed view to satisfy publishData's type.
+      // topic 'caption' keeps this separate from LiveKit chat data.
       room.localParticipant.publishData(Uint8Array.from(encodeCaption(entry)), {
         reliable: true,
+        topic: 'caption',
       })
       opts.onEntry(entry)
     } catch {

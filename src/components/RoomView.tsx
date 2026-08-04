@@ -16,6 +16,7 @@ import { SettingsSheet } from './SettingsSheet'
 import { ChatPanel } from './ChatPanel'
 import { DocsView } from './DocsView'
 import { useLocalMic } from '../lib/useLocalMic'
+import { useCaptions } from '../lib/useCaptions'
 import {
   MicIcon,
   MicOffIcon,
@@ -178,12 +179,13 @@ function RoomInner({
 
   const mic = useLocalMic(room, micDeviceId)
   useSpeakerVolume(speakerVolume / 100)
+  const captions = useCaptions(room, { speaker: name, sourceLang: lang, targetLangs: ['ko', 'en'] })
 
   return (
     <>
       <Stage />
       <CodePill code={code} />
-      <Captions speaker={name} sourceLang={lang} displayLang={lang} targetLangs={['ko', 'en']} />
+      <Captions entries={captions} displayLang={lang} />
 
       <div className="glass controlbar">
         <button
@@ -246,7 +248,13 @@ function RoomInner({
         </div>
       )}
 
-      <ChatPanel open={chatOpen} onClose={() => setChatOpen(false)} />
+      <ChatPanel
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        captions={captions}
+        displayLang={lang}
+        myName={name}
+      />
       <ParticipantsPanel open={peopleOpen} onClose={() => setPeopleOpen(false)} />
       <SettingsSheet
         open={settingsOpen}
