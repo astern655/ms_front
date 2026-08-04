@@ -434,6 +434,7 @@ option {
 .dock .docs-view {
   position: static;
   flex: 1;
+  min-width: 0;
   padding: 10px;
   gap: 8px;
 }

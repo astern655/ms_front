@@ -158,7 +158,7 @@ function RoomInner({
   const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
   const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
   const [dockWidth, setDockWidth] = useState(() =>
-    Math.round(Math.min(400, window.innerWidth * 0.42)),
+    Math.round(Math.min(520, window.innerWidth * 0.42)),
   )
   const startResize = (e: ReactMouseEvent) => {
     e.preventDefault()
