@@ -10,14 +10,60 @@ const MODES: { key: AgentMode; label: string; hint: string }[] = [
   { key: 'dev', label: '개발', hint: '개발 계획·명세' },
 ]
 
-// Plain markdown text → BlockNote block JSON (one paragraph per line).
-function toBlocks(text: string): string {
-  return JSON.stringify(
-    text.split('\n').map((line) => ({
-      type: 'paragraph',
-      content: line ? [{ type: 'text', text: line, styles: {} }] : [],
-    })),
-  )
+type Inline = { type: 'text'; text: string; styles: Record<string, boolean> }
+type Block = { type: string; props?: Record<string, unknown>; content: Inline[]; children?: Block[] }
+
+// Parse inline markdown: **bold**, *italic*, `code`.
+function parseInline(text: string): Inline[] {
+  const runs: Inline[] = []
+  const re = /\*\*([^*]+)\*\*|`([^`]+)`|\*([^*]+)\*/g
+  let last = 0
+  let m: RegExpExecArray | null
+  while ((m = re.exec(text))) {
+    if (m.index > last) runs.push({ type: 'text', text: text.slice(last, m.index), styles: {} })
+    if (m[1] != null) runs.push({ type: 'text', text: m[1], styles: { bold: true } })
+    else if (m[2] != null) runs.push({ type: 'text', text: m[2], styles: { code: true } })
+    else if (m[3] != null) runs.push({ type: 'text', text: m[3], styles: { italic: true } })
+    last = m.index + m[0].length
+  }
+  if (last < text.length) runs.push({ type: 'text', text: text.slice(last), styles: {} })
+  return runs
+}
+
+// Markdown → BlockNote blocks (headings, bullet/numbered lists with nesting, paragraphs).
+function toBlocks(md: string): string {
+  const lines = md.replace(/\r/g, '').split('\n')
+  const root: Block[] = []
+  const stack: { indent: number; block: Block }[] = []
+
+  const place = (indent: number, block: Block, isList: boolean) => {
+    if (!isList) {
+      root.push(block)
+      stack.length = 0
+      return
+    }
+    while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop()
+    if (stack.length) (stack[stack.length - 1].block.children ??= []).push(block)
+    else root.push(block)
+    stack.push({ indent, block })
+  }
+
+  for (const raw of lines) {
+    const t = raw.trim()
+    if (!t) continue
+    const indent = raw.length - raw.trimStart().length
+    let m: RegExpMatchArray | null
+    if ((m = t.match(/^(#{1,3})\s+(.*)$/))) {
+      place(indent, { type: 'heading', props: { level: m[1].length }, content: parseInline(m[2]) }, false)
+    } else if ((m = t.match(/^[-*]\s+(.*)$/))) {
+      place(indent, { type: 'bulletListItem', content: parseInline(m[1]) }, true)
+    } else if ((m = t.match(/^\d+\.\s+(.*)$/))) {
+      place(indent, { type: 'numberedListItem', content: parseInline(m[1]) }, true)
+    } else {
+      place(indent, { type: 'paragraph', content: parseInline(t) }, false)
+    }
+  }
+  return JSON.stringify(root)
 }
 
 // Higher-level agent: meeting/docs + direction → a deliverable (PRD/report/plan/design/dev).
