@@ -17,6 +17,7 @@ import { GroupSettings } from '../GroupSettings'
 import { ProfileEdit } from '../ProfileEdit'
 import { DocsView } from '../DocsView'
 import { ChatBot } from '../ChatBot'
+import { AgentView } from '../AgentView'
 import { SettingsIcon, LogoutIcon } from '../icons'
 
 const serverUrl =
@@ -48,7 +49,7 @@ export function Workspace({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [groupMenu, setGroupMenu] = useState(false)
-  const [view, setView] = useState<'board' | 'docs'>('board')
+  const [view, setView] = useState<'board' | 'docs' | 'agent'>('board')
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const activeTeamId = active?.team.id ?? null
@@ -268,6 +269,9 @@ export function Workspace({
             <button className={view === 'docs' ? 'on' : ''} onClick={() => setView('docs')}>
               문서
             </button>
+            <button className={view === 'agent' ? 'on' : ''} onClick={() => setView('agent')}>
+              에이전트
+            </button>
           </div>
         )}
 
@@ -299,6 +303,8 @@ export function Workspace({
           />
         ) : activeGroup && view === 'docs' ? (
           <DocsView groupId={activeGroup.id} />
+        ) : activeGroup && view === 'agent' ? (
+          <AgentView groupId={activeGroup.id} />
         ) : activeGroup ? (
           <div className="board">
             {teams.map((t) => {
@@ -359,7 +365,7 @@ export function Workspace({
         />
       )}
 
-      {activeGroup && <ChatBot groupId={activeGroup.id} teamId={active?.team.id ?? null} />}
+      {activeGroup && <ChatBot groupId={activeGroup.id} />}
     </div>
   )
 }
