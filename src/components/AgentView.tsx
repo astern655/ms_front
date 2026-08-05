@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { runAgent, reindexRag, type AgentMode } from '../lib/rag'
 import { createDoc, saveDoc } from '../lib/docs'
+import { listTeams, type Group, type Team } from '../lib/teams'
+import { Select } from './Select'
 
 const MODES: { key: AgentMode; label: string; hint: string }[] = [
   { key: 'prd', label: 'PRD', hint: '제품 요구사항 문서' },
@@ -67,7 +69,16 @@ function toBlocks(md: string): string {
 }
 
 // Higher-level agent: meeting/docs + direction → a deliverable (PRD/report/plan/design/dev).
-export function AgentView({ groupId }: { groupId: string }) {
+export function AgentView({
+  groups,
+  activeGroupId,
+}: {
+  groups: Group[]
+  activeGroupId: string
+}) {
+  const [groupId, setGroupId] = useState(activeGroupId)
+  const [teams, setTeams] = useState<Team[]>([])
+  const [teamId, setTeamId] = useState<string>('')
   const [mode, setMode] = useState<AgentMode>('prd')
   const [direction, setDirection] = useState('')
   const [result, setResult] = useState<{ title: string; content: string; sources: string[] } | null>(
@@ -77,6 +88,14 @@ export function AgentView({ groupId }: { groupId: string }) {
   const [note, setNote] = useState('')
   const [saved, setSaved] = useState(false)
 
+  // Load teams whenever the selected group changes.
+  useEffect(() => {
+    setTeamId('')
+    listTeams(groupId)
+      .then(setTeams)
+      .catch((e) => setNote((e as Error).message))
+  }, [groupId])
+
   const run = async () => {
     if (busy) return
     setBusy(true)
@@ -84,7 +103,9 @@ export function AgentView({ groupId }: { groupId: string }) {
     setResult(null)
     setSaved(false)
     try {
-      const r = await runAgent(groupId, mode, direction.trim())
+      const teamName = teams.find((t) => t.id === teamId)?.name
+      const dir = (teamName ? `[대상 팀: ${teamName}] ` : '') + direction.trim()
+      const r = await runAgent(groupId, mode, dir)
       setResult(r)
     } catch (e) {
       setNote(`오류: ${(e as Error).message}`)
@@ -133,6 +154,29 @@ export function AgentView({ groupId }: { groupId: string }) {
         <p className="agent-sub">
           회의·문서 기록과 방향을 주면 산출물을 만들어 줍니다.
         </p>
+
+        <div className="agent-scope">
+          <label className="agent-field">
+            <span>그룹</span>
+            <Select
+              value={groupId}
+              onChange={setGroupId}
+              options={groups.map((g) => ({ value: g.id, label: g.name }))}
+            />
+          </label>
+          <label className="agent-field">
+            <span>팀</span>
+            <Select
+              value={teamId}
+              onChange={setTeamId}
+              placeholder="전체"
+              options={[
+                { value: '', label: '그룹 전체' },
+                ...teams.map((t) => ({ value: t.id, label: t.name })),
+              ]}
+            />
+          </label>
+        </div>
 
         <div className="agent-modes">
           {MODES.map((m) => (

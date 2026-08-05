@@ -145,10 +145,12 @@ function RoomInner({
   name,
   lang,
   groupId,
+  startAudioOn,
 }: {
   name: string
   lang: string
   groupId: string
+  startAudioOn: boolean
 }) {
   const room = useRoomContext()
   const [micDeviceId, setMicDeviceId] = useState<string | undefined>(undefined)
@@ -175,7 +177,7 @@ function RoomInner({
     window.addEventListener('mouseup', onUp)
   }
 
-  const mic = useLocalMic(room, micDeviceId)
+  const mic = useLocalMic(room, micDeviceId, !startAudioOn)
   useSpeakerVolume(speakerVolume / 100)
   const captions = useCaptions(room, { speaker: name, sourceLang: lang, targetLangs: ['ko', 'en'] })
 
@@ -278,6 +280,8 @@ export function RoomView({
   name,
   lang,
   groupId,
+  startVideo = true,
+  startAudioOn = true,
   onLeave,
 }: {
   serverUrl: string
@@ -285,6 +289,8 @@ export function RoomView({
   name: string
   lang: string
   groupId: string
+  startVideo?: boolean
+  startAudioOn?: boolean
   onLeave: () => void
 }) {
   return (
@@ -293,12 +299,12 @@ export function RoomView({
       token={token}
       serverUrl={serverUrl}
       connect
-      video
+      video={startVideo}
       audio={false}
       onDisconnected={onLeave}
     >
       <RoomAudioRenderer />
-      <RoomInner name={name} lang={lang} groupId={groupId} />
+      <RoomInner name={name} lang={lang} groupId={groupId} startAudioOn={startAudioOn} />
     </LiveKitRoom>
   )
 }

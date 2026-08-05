@@ -4,8 +4,8 @@ import { LocalAudioTrack, Track, type Room } from 'livekit-client'
 // Publishes the local mic through a Web Audio gain node so "mic volume" actually
 // changes the transmitted level. Also exposes a live input level (0..1) for a meter.
 // LiveKitRoom must be mounted with audio={false} so it doesn't also publish the raw mic.
-export function useLocalMic(room: Room, deviceId?: string) {
-  const [muted, setMuted] = useState(false)
+export function useLocalMic(room: Room, deviceId?: string, startMuted = false) {
+  const [muted, setMuted] = useState(startMuted)
   const gainNodeRef = useRef<GainNode | null>(null)
   const trackRef = useRef<LocalAudioTrack | null>(null)
   const levelRef = useRef(0)
@@ -39,6 +39,7 @@ export function useLocalMic(room: Room, deviceId?: string) {
 
       const track = new LocalAudioTrack(dest.stream.getAudioTracks()[0])
       await room.localParticipant.publishTrack(track, { source: Track.Source.Microphone })
+      if (startMuted) await track.mute()
       trackRef.current = track
 
       const buf = new Uint8Array(analyser.fftSize)

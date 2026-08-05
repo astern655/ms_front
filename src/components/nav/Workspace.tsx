@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { RoomView } from '../RoomView'
+import { Prejoin } from '../Prejoin'
 import { API_BASE } from '../../lib/api'
 import {
   listGroups,
@@ -38,7 +39,13 @@ export function Workspace({
   const [groups, setGroups] = useState<Group[]>([])
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null)
   const [teams, setTeams] = useState<Team[]>([])
-  const [active, setActive] = useState<{ team: Team; token: string } | null>(null)
+  const [active, setActive] = useState<{
+    team: Team
+    token: string
+    video: boolean
+    audio: boolean
+  } | null>(null)
+  const [pending, setPending] = useState<{ team: Team; token: string } | null>(null)
   const [presence, setPresence] = useState<Record<string, string[]>>({})
   const [error, setError] = useState('')
   const [newGroup, setNewGroup] = useState('')
@@ -172,7 +179,8 @@ export function Workspace({
       )
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'token error')
-      setActive({ team, token: data.token })
+      // Show the prejoin (device preview) before actually joining.
+      setPending({ team, token: data.token })
     } catch (e) {
       setError((e as Error).message)
     }
@@ -291,7 +299,17 @@ export function Workspace({
       </header>
 
       <div className="app-content">
-        {active ? (
+        {pending ? (
+          <Prejoin
+            teamName={pending.team.name}
+            name={profile.name}
+            onCancel={() => setPending(null)}
+            onJoin={({ video, audio }) => {
+              setActive({ team: pending.team, token: pending.token, video, audio })
+              setPending(null)
+            }}
+          />
+        ) : active ? (
           <RoomView
             key={active.team.id}
             serverUrl={serverUrl}
@@ -299,12 +317,14 @@ export function Workspace({
             name={profile.name}
             lang={profile.language}
             groupId={active.team.group_id}
+            startVideo={active.video}
+            startAudioOn={active.audio}
             onLeave={() => setActive(null)}
           />
         ) : activeGroup && view === 'docs' ? (
           <DocsView groupId={activeGroup.id} />
         ) : activeGroup && view === 'agent' ? (
-          <AgentView groupId={activeGroup.id} />
+          <AgentView groups={groups} activeGroupId={activeGroup.id} />
         ) : activeGroup ? (
           <div className="board">
             {teams.map((t) => {
