@@ -81,7 +81,7 @@ export function AiPanel({ groupId }: { groupId: string }) {
           onChange={(e) => setQ(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && ask()}
         />
-        <button className="btn" onClick={ask} disabled={busy}>
+        <button className="ai-send" onClick={ask} disabled={busy}>
           보내기
         </button>
       </div>

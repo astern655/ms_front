@@ -479,7 +479,11 @@ option {
   z-index: 2;
 }
 .chatbot-popup .ai-head {
-  padding-right: 34px;
+  padding-right: 46px;
+}
+/* breathing room between 다시 색인 and the close X */
+.chatbot-popup .ai-head .btn-mini {
+  margin-right: 6px;
 }
 .ai-head {
   display: flex;
@@ -557,6 +561,31 @@ option {
 .ai-input {
   flex: 0 0 auto;
   margin-top: 10px;
+  align-items: stretch;
+  gap: 8px;
+}
+.ai-input .field {
+  padding: 12px 14px;
+}
+.ai-send {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s ease;
+}
+.ai-send:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.ai-send:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .dock-fill .chat-input {
