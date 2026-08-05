@@ -359,7 +359,7 @@ export function Workspace({
         />
       )}
 
-      {activeGroup && <ChatBot groupId={activeGroup.id} />}
+      {activeGroup && <ChatBot groupId={activeGroup.id} teamId={active?.team.id ?? null} />}
     </div>
   )
 }
