@@ -158,15 +158,15 @@ function RoomInner({
   const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
   const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
   const [dockWidth, setDockWidth] = useState(() =>
-    Math.round(Math.min(440, window.innerWidth * 0.4)),
+    Math.round(Math.min(540, window.innerWidth * 0.46)),
   )
   const startResize = (e: ReactMouseEvent) => {
     e.preventDefault()
     const startX = e.clientX
     const startW = dockWidth
-    // Dock never dominates: capped at 48% of the window; stage keeps ≥ ~52%.
+    // Dock never dominates: capped at 54% of the window.
     const onMove = (ev: MouseEvent) =>
-      setDockWidth(Math.min(window.innerWidth * 0.48, Math.max(280, startW + (startX - ev.clientX))))
+      setDockWidth(Math.min(window.innerWidth * 0.54, Math.max(280, startW + (startX - ev.clientX))))
     const onUp = () => {
       window.removeEventListener('mousemove', onMove)
       window.removeEventListener('mouseup', onUp)
