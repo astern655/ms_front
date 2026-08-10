@@ -14,9 +14,9 @@ import { RoomEvent, Track, type RemoteAudioTrack } from 'livekit-client'
 import { Captions } from './Captions'
 import { SettingsSheet } from './SettingsSheet'
 import { ChatFeed } from './ChatPanel'
-import { DocsView } from './DocsView'
-import { useLocalMic } from '../lib/useLocalMic'
-import { useCaptions } from '../lib/useCaptions'
+import { DocsView } from '../docs/DocsView'
+import { useLocalMic } from './useLocalMic'
+import { useCaptions } from './useCaptions'
 import {
   MicIcon,
   MicOffIcon,
@@ -29,7 +29,7 @@ import {
   PeopleIcon,
   CloseIcon,
   DocIcon,
-} from './icons'
+} from '../../components/ui/icons'
 
 function ParticipantsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const participants = useParticipants()

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { askRag, reindexRag } from '../lib/rag'
+import { askRag, reindexRag } from './rag'
 
 type Msg = { role: 'user' | 'ai'; text: string; sources?: string[] }
 

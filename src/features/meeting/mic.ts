@@ -1,6 +1,6 @@
 import type { Room } from 'livekit-client'
 import { encodeCaption, type TranscriptEntry } from './caption'
-import { API_BASE } from './api'
+import { API_BASE } from '../../lib/api'
 
 // Records the local mic in fixed chunks, sends each to /api/stt, then broadcasts
 // the resulting caption to the room and reports it locally via onEntry.

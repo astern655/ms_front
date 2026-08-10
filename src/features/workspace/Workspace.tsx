@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
-import { RoomView } from '../RoomView'
-import { Prejoin } from '../Prejoin'
+import { RoomView } from '../meeting/RoomView'
+import { Prejoin } from '../meeting/Prejoin'
 import { API_BASE } from '../../lib/api'
 import {
   listGroups,
@@ -13,13 +13,13 @@ import {
   joinGroupByCode,
   type Group,
   type Team,
-} from '../../lib/teams'
-import { GroupSettings } from '../GroupSettings'
-import { ProfileEdit } from '../ProfileEdit'
-import { DocsView } from '../DocsView'
-import { ChatBot } from '../ChatBot'
-import { AgentView } from '../AgentView'
-import { SettingsIcon, LogoutIcon } from '../icons'
+} from '../groups/teams'
+import { GroupSettings } from '../groups/GroupSettings'
+import { ProfileEdit } from '../groups/ProfileEdit'
+import { DocsView } from '../docs/DocsView'
+import { ChatBot } from '../agent/ChatBot'
+import { AgentView } from '../agent/AgentView'
+import { SettingsIcon, LogoutIcon } from '../../components/ui/icons'
 
 const serverUrl =
   (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??

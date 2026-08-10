@@ -1,7 +1,7 @@
 import { useEffect, useState, type RefObject } from 'react'
 import { useMediaDeviceSelect } from '@livekit/components-react'
-import { MicIcon, SpeakerIcon, VideoIcon, CloseIcon } from './icons'
-import { Select } from './Select'
+import { MicIcon, SpeakerIcon, VideoIcon, CloseIcon } from '../../components/ui/icons'
+import { Select } from '../../components/ui/Select'
 
 function DeviceSelect({
   kind,

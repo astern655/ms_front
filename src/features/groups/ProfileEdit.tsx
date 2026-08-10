@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { updateProfile } from '../lib/teams'
-import { CloseIcon } from './icons'
-import { Select } from './Select'
+import { updateProfile } from './teams'
+import { CloseIcon } from '../../components/ui/icons'
+import { Select } from '../../components/ui/Select'
 
 const JOB_ROLES = ['기획/PM', '디자인', '프론트엔드', '백엔드', 'AI/데이터', '기타']
 

@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../../lib/supabase'
 
 export type Group = { id: string; name: string; owner_id: string; invite_code: string | null }
 export type Team = { id: string; group_id: string; name: string }

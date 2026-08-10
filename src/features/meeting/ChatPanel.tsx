@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useChat, useLocalParticipant } from '@livekit/components-react'
-import { SendIcon } from './icons'
-import type { TranscriptEntry } from '../lib/caption'
+import { SendIcon } from '../../components/ui/icons'
+import type { TranscriptEntry } from './caption'
 
 type FeedItem = {
   kind: 'chat' | 'caption'

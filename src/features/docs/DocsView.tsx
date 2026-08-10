@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { listDocs, createDoc, saveDoc, deleteDoc, type Doc, type DocScope } from '../lib/docs'
+import { listDocs, createDoc, saveDoc, deleteDoc, type Doc, type DocScope } from './docs'
 import { DocEditor } from './DocEditor'
 
 const SCOPES: { v: DocScope; l: string }[] = [

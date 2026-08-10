@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+import { supabase } from '../../lib/supabase'
 
 export type DocScope = 'personal' | 'team' | 'meeting' | 'group'
 

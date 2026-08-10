@@ -7,8 +7,8 @@ import {
   type Group,
   type Team,
   type Member,
-} from '../lib/teams'
-import { CloseIcon } from './icons'
+} from './teams'
+import { CloseIcon } from '../../components/ui/icons'
 
 export function GroupSettings({
   group,

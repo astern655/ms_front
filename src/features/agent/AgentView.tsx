@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { runAgent, reindexRag, type AgentMode } from '../lib/rag'
-import { createDoc, saveDoc } from '../lib/docs'
-import { listTeams, type Group, type Team } from '../lib/teams'
-import { Select } from './Select'
+import { runAgent, reindexRag, type AgentMode } from './rag'
+import { createDoc, saveDoc } from '../docs/docs'
+import { listTeams, type Group, type Team } from '../groups/teams'
+import { Select } from '../../components/ui/Select'
 
 const MODES: { key: AgentMode; label: string; hint: string }[] = [
   { key: 'prd', label: 'PRD', hint: '제품 요구사항 문서' },

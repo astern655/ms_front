@@ -1,4 +1,4 @@
-import { API_BASE } from './api'
+import { API_BASE } from '../../lib/api'
 
 async function json<T>(res: Response): Promise<T> {
   const data = await res.json()

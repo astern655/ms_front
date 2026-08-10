@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePreviewTracks } from '@livekit/components-react'
 import { Track, type LocalVideoTrack } from 'livekit-client'
-import { MicIcon, MicOffIcon, VideoIcon, VideoOffIcon } from './icons'
+import { MicIcon, MicOffIcon, VideoIcon, VideoOffIcon } from '../../components/ui/icons'
 
 // Device preview before joining: pick camera/mic on-off and see yourself.
 export function Prejoin({

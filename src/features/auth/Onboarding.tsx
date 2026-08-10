@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase, type Profile } from '../../lib/supabase'
-import { Select } from '../Select'
+import { Select } from '../../components/ui/Select'
 
 const JOB_ROLES = ['기획/PM', '디자인', '프론트엔드', '백엔드', 'AI/데이터', '기타']
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, type Profile } from './lib/supabase'
-import { AuthScreen } from './components/auth/AuthScreen'
-import { Onboarding } from './components/auth/Onboarding'
-import { Workspace } from './components/nav/Workspace'
-import { joinGroupByCode } from './lib/teams'
+import { AuthScreen } from './features/auth/AuthScreen'
+import { Onboarding } from './features/auth/Onboarding'
+import { Workspace } from './features/workspace/Workspace'
+import { joinGroupByCode } from './features/groups/teams'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)

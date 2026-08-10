@@ -1,4 +1,4 @@
-import type { TranscriptEntry } from '../lib/caption'
+import type { TranscriptEntry } from './caption'
 
 // Overlay of the most recent captions, rendered in the viewer's language.
 export function Captions({

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AiPanel } from './AiPanel'
-import { AiIcon, CloseIcon } from './icons'
+import { AiIcon, CloseIcon } from '../../components/ui/icons'
 
 // Floating toggle chatbot widget (bottom-right): lightweight quick Q&A popup.
 export function ChatBot({ groupId }: { groupId: string }) {
