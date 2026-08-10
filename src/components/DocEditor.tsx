@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import type { PartialBlock } from '@blocknote/core'
+import { ko, en } from '@blocknote/core/locales'
 import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import '@blocknote/mantine/style.css'
@@ -21,11 +22,16 @@ function parseContent(content: string): PartialBlock[] | undefined {
 export function DocEditor({
   content,
   onChange,
+  lang = 'ko',
 }: {
   content: string
   onChange: (json: string) => void
+  lang?: string
 }) {
-  const editor = useCreateBlockNote({ initialContent: parseContent(content) })
+  const editor = useCreateBlockNote({
+    initialContent: parseContent(content),
+    dictionary: lang === 'en' ? en : ko,
+  })
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   return (

@@ -10,7 +10,7 @@ const SCOPES: { v: DocScope; l: string }[] = [
 ]
 const scopeLabel = (v: DocScope) => SCOPES.find((s) => s.v === v)?.l ?? v
 
-export function DocsView({ groupId }: { groupId: string }) {
+export function DocsView({ groupId, lang = 'ko' }: { groupId: string; lang?: string }) {
   const [docs, setDocs] = useState<Doc[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
@@ -197,7 +197,7 @@ export function DocsView({ groupId }: { groupId: string }) {
                 ✕
               </button>
             </div>
-            <DocEditor key={activeId} content={activeContent} onChange={onContent} />
+            <DocEditor key={activeId} content={activeContent} onChange={onContent} lang={lang} />
           </>
         ) : (
           <div className="ws-empty">

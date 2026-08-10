@@ -322,7 +322,7 @@ export function Workspace({
             onLeave={() => setActive(null)}
           />
         ) : activeGroup && view === 'docs' ? (
-          <DocsView groupId={activeGroup.id} />
+          <DocsView groupId={activeGroup.id} lang={profile.language} />
         ) : activeGroup && view === 'agent' ? (
           <AgentView groups={groups} activeGroupId={activeGroup.id} />
         ) : activeGroup ? (

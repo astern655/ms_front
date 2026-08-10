@@ -879,6 +879,20 @@ option {
   background-color: var(--accent) !important;
 }
 
+/* Rounded blocks + consistent selection tint (OS 'highlight' color can render red) */
+.blocknote-wrap .bn-block-content,
+.blocknote-wrap .bn-block-content [data-content-type] {
+  border-radius: 10px;
+}
+.blocknote-wrap [data-show-selection],
+.blocknote-wrap .ProseMirror-selectednode {
+  background-color: rgba(var(--accent-rgb), 0.22) !important;
+  border-radius: 10px;
+}
+.blocknote-wrap ::selection {
+  background: rgba(var(--accent-rgb), 0.4);
+}
+
 /* --- Doc share scope (subtle chip + menu) --- */
 .scope-control {
   position: relative;
