@@ -1,15 +1,24 @@
 import { useEffect, useState } from 'react'
-import { runAgent, reindexRag, type AgentMode } from './rag'
+import {
+  planAgent,
+  proceedAgent,
+  reindexRag,
+  runAgent,
+  type AgentArtifact,
+  type AgentMode,
+} from './rag'
 import { createDoc, saveDoc } from '../docs/docs'
 import { listTeams, type Group, type Team } from '../groups/teams'
 import { Select } from '../../components/ui/Select'
 
 const MODES: { key: AgentMode; label: string; hint: string }[] = [
+  { key: 'meeting_summary', label: '회의 요약', hint: '결정·근거 구조화' },
+  { key: 'decisions', label: '결정 추출', hint: '담당자·기한 표' },
+  { key: 'action_plan', label: '실행 계획', hint: '승인 전 계획' },
+  { key: 'ppt_draft', label: 'PPT 초안', hint: '대표 산출물' },
+  { key: 'task_draft', label: '태스크', hint: 'Notion·Jira 초안' },
   { key: 'prd', label: 'PRD', hint: '제품 요구사항 문서' },
   { key: 'report', label: '보고서', hint: '진행·논의 정리' },
-  { key: 'plan', label: '계획', hint: '실행 계획·WBS' },
-  { key: 'design', label: '디자인', hint: '디자인 방향서' },
-  { key: 'dev', label: '개발', hint: '개발 계획·명세' },
 ]
 
 type Inline = { type: 'text'; text: string; styles: Record<string, boolean> }
@@ -79,11 +88,11 @@ export function AgentView({
   const [groupId, setGroupId] = useState(activeGroupId)
   const [teams, setTeams] = useState<Team[]>([])
   const [teamId, setTeamId] = useState<string>('')
-  const [mode, setMode] = useState<AgentMode>('prd')
+  const [mode, setMode] = useState<AgentMode>('ppt_draft')
   const [direction, setDirection] = useState('')
-  const [result, setResult] = useState<{ title: string; content: string; sources: string[] } | null>(
-    null,
-  )
+  const [meetingTranscript, setMeetingTranscript] = useState('')
+  const [plan, setPlan] = useState<AgentArtifact | null>(null)
+  const [result, setResult] = useState<AgentArtifact | null>(null)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState('')
   const [saved, setSaved] = useState(false)
@@ -96,17 +105,62 @@ export function AgentView({
       .catch((e) => setNote((e as Error).message))
   }, [groupId])
 
-  const run = async () => {
+  const scopedDirection = () => {
+    const teamName = teams.find((t) => t.id === teamId)?.name
+    return (teamName ? `[대상 팀: ${teamName}] ` : '') + direction.trim()
+  }
+
+  const buildPlan = async () => {
+    if (busy) return
+    setBusy(true)
+    setNote('')
+    setPlan(null)
+    setResult(null)
+    setSaved(false)
+    try {
+      const p = await planAgent(groupId, scopedDirection(), meetingTranscript.trim())
+      setPlan(p)
+      setNote('실행 계획이 준비됐습니다. 내용을 확인한 뒤 proceed를 누르세요.')
+    } catch (e) {
+      setNote(`오류: ${(e as Error).message}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const proceed = async () => {
+    if (busy || !plan) return
+    setBusy(true)
+    setNote('')
+    setResult(null)
+    setSaved(false)
+    try {
+      const r = await proceedAgent({
+        groupId,
+        direction: scopedDirection(),
+        meetingTranscript: meetingTranscript.trim(),
+        executionPlan: plan.content,
+        mode,
+      })
+      setResult(r)
+      setNote('승인된 실행 계획으로 산출물을 생성했습니다.')
+    } catch (e) {
+      setNote(`오류: ${(e as Error).message}`)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const runDirect = async () => {
     if (busy) return
     setBusy(true)
     setNote('')
     setResult(null)
     setSaved(false)
     try {
-      const teamName = teams.find((t) => t.id === teamId)?.name
-      const dir = (teamName ? `[대상 팀: ${teamName}] ` : '') + direction.trim()
-      const r = await runAgent(groupId, mode, dir)
+      const r = await runAgent(groupId, mode, scopedDirection(), meetingTranscript.trim())
       setResult(r)
+      setNote('승인 단계를 건너뛰고 산출물을 생성했습니다.')
     } catch (e) {
       setNote(`오류: ${(e as Error).message}`)
     } finally {
@@ -152,7 +206,7 @@ export function AgentView({
           </button>
         </div>
         <p className="agent-sub">
-          회의·문서 기록과 방향을 주면 산출물을 만들어 줍니다.
+          회사 문서와 회의 기록을 바탕으로 실행 계획을 제안하고, 승인 후 산출물을 생성합니다.
         </p>
 
         <div className="agent-scope">
@@ -194,40 +248,75 @@ export function AgentView({
         <textarea
           className="field agent-direction"
           rows={4}
-          placeholder="원하는 방향·목표를 적어주세요. (예: '실시간 번역 회의 앱' MVP 범위로 PRD 작성)"
+          placeholder="원하는 방향·목표를 적어주세요. 예: 이번 제품 출시 회의 결과를 고객 공유용 PPT 초안으로 정리"
           value={direction}
           onChange={(e) => setDirection(e.target.value)}
         />
 
-        <button className="btn-primary agent-run" onClick={run} disabled={busy}>
-          {busy ? '생성 중…' : '산출물 생성'}
+        <textarea
+          className="field agent-direction"
+          rows={7}
+          placeholder="회의 transcript 또는 회의 메모를 붙여넣으세요. 한·영 혼합 발언, 결정사항 후보, 담당자, 기한이 포함되면 좋습니다."
+          value={meetingTranscript}
+          onChange={(e) => setMeetingTranscript(e.target.value)}
+        />
+
+        <button className="btn-primary agent-run" onClick={buildPlan} disabled={busy}>
+          {busy ? '처리 중…' : '실행 계획 만들기'}
+        </button>
+        <button className="btn-mini ghost agent-secondary" onClick={runDirect} disabled={busy}>
+          바로 산출물 생성
         </button>
         {note && <p className="agent-note">{note}</p>}
       </div>
 
       <div className="agent-result glass">
-        {result ? (
+        {plan || result ? (
           <>
             <div className="agent-result-head">
-              <h3>{result.title}</h3>
-              <button className="btn-mini" onClick={saveAsDoc} disabled={busy || saved}>
-                {saved ? '저장됨' : '문서로 저장'}
-              </button>
+              <div>
+                <p className="agent-kicker">
+                  {result ? '생성된 산출물' : '승인 대기 실행 계획'}
+                </p>
+                <h3>{(result ?? plan)?.title}</h3>
+              </div>
+              <div className="agent-actions">
+                {plan && !result && (
+                  <button className="btn-mini" onClick={proceed} disabled={busy}>
+                    proceed
+                  </button>
+                )}
+                {result && (
+                  <button className="btn-mini" onClick={saveAsDoc} disabled={busy || saved}>
+                    {saved ? '저장됨' : '문서로 저장'}
+                  </button>
+                )}
+              </div>
             </div>
-            {result.sources.length > 0 && (
+            {(result ?? plan)?.nextAction && <p className="agent-note">{(result ?? plan)?.nextAction}</p>}
+            {(result ?? plan)!.selectedSkills.length > 0 && (
+              <div className="agent-skill-strip">
+                {(result ?? plan)!.selectedSkills.map((skill) => (
+                  <span key={skill.id} className="agent-skill" title={skill.purpose}>
+                    {skill.label}
+                  </span>
+                ))}
+              </div>
+            )}
+            {(result ?? plan)!.sources.length > 0 && (
               <div className="ai-sources">
-                {result.sources.map((s, i) => (
+                {(result ?? plan)!.sources.map((s, i) => (
                   <span key={i} className="ai-src">
                     {s}
                   </span>
                 ))}
               </div>
             )}
-            <div className="agent-output">{result.content}</div>
+            <div className="agent-output">{(result ?? plan)?.content}</div>
           </>
         ) : (
           <div className="agent-empty">
-            <p className="subtitle">산출물 종류를 고르고 방향을 입력한 뒤 “산출물 생성”을 누르세요.</p>
+            <p className="subtitle">방향과 회의 기록을 입력한 뒤 “실행 계획 만들기”를 누르세요.</p>
           </div>
         )}
       </div>
