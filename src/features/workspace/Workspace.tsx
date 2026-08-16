@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactElement } from 'react'
 import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { RoomView } from '../meeting/RoomView'
@@ -19,13 +19,20 @@ import { ProfileEdit } from '../groups/ProfileEdit'
 import { DocsView } from '../docs/DocsView'
 import { ChatBot } from '../agent/ChatBot'
 import { AgentView } from '../agent/AgentView'
-import { SettingsIcon, LogoutIcon } from '../../components/ui/icons'
+import { BoardIcon, DocIcon, AiIcon, PeopleIcon, SettingsIcon, LogoutIcon } from '../../components/ui/icons'
 
 const serverUrl =
   (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
   'wss://ms-hack-ly6rx40h.livekit.cloud'
 
 type Profile = { id: string; name: string; language: string; job_role?: string | null }
+type View = 'board' | 'docs' | 'agent'
+
+const NAV: { key: View; label: string; icon: () => ReactElement }[] = [
+  { key: 'board', label: '팀 보드', icon: BoardIcon },
+  { key: 'docs', label: '문서', icon: DocIcon },
+  { key: 'agent', label: '에이전트', icon: AiIcon },
+]
 
 export function Workspace({
   profile,
@@ -50,13 +57,11 @@ export function Workspace({
   const [error, setError] = useState('')
   const [newGroup, setNewGroup] = useState('')
   const [newTeam, setNewTeam] = useState('')
-  const [addingGroup, setAddingGroup] = useState(false)
-  const [joining, setJoining] = useState(false)
   const [joinCode, setJoinCode] = useState('')
+  const [railMenu, setRailMenu] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const [groupMenu, setGroupMenu] = useState(false)
-  const [view, setView] = useState<'board' | 'docs' | 'agent'>('board')
+  const [view, setView] = useState<View>('board')
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const activeTeamId = active?.team.id ?? null
@@ -114,6 +119,17 @@ export function Workspace({
   const activeGroup = groups.find((g) => g.id === activeGroupId) ?? null
   const isOwner = !!activeGroup && activeGroup.owner_id === profile.id
 
+  const switchGroup = (id: string) => {
+    setActiveGroupId(id)
+    setActive(null)
+    setView('board')
+  }
+
+  const goView = (v: View) => {
+    setActive(null)
+    setView(v)
+  }
+
   const addGroup = async () => {
     const name = newGroup.trim()
     if (!name) return
@@ -122,7 +138,7 @@ export function Workspace({
       setGroups((prev) => [...prev, g])
       setActiveGroupId(g.id)
       setNewGroup('')
-      setAddingGroup(false)
+      setRailMenu(false)
     } catch (e) {
       setError((e as Error).message)
     }
@@ -153,7 +169,7 @@ export function Workspace({
       setGroups(gs)
       setActiveGroupId(gid)
       setJoinCode('')
-      setJoining(false)
+      setRailMenu(false)
     } catch (e) {
       setError((e as Error).message)
     }
@@ -186,119 +202,154 @@ export function Workspace({
     }
   }
 
+  // No group yet → simple onboarding to create/join.
+  if (!activeGroup) {
+    return (
+      <div className="ws-empty">
+        <h1 className="brand">Borderless</h1>
+        <p className="subtitle">첫 그룹을 만들거나 초대 코드로 참가하세요</p>
+        <div className="ws-empty-actions">
+          <input
+            className="field"
+            placeholder="새 그룹 이름 + Enter"
+            value={newGroup}
+            onChange={(e) => setNewGroup(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && addGroup()}
+          />
+          <input
+            className="field"
+            placeholder="초대 링크 또는 코드 + Enter"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
+          />
+        </div>
+        {error && <p className="error">{error}</p>}
+        <button className="btn-ghost ws-empty-logout" onClick={onSignOut}>
+          로그아웃
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="app-shell">
-      <header className="topbar glass">
-        <div className="tb-left">
-          <span className="tb-brand">Borderless</span>
-          <div className="group-switch">
-            <button className="group-pill" onClick={() => setGroupMenu((v) => !v)}>
-              {activeGroup?.name ?? '그룹 선택'} <span className="caret">▾</span>
-            </button>
-            {groupMenu && (
-              <>
-                <div className="menu-catch" onClick={() => setGroupMenu(false)} />
-                <div className="menu glass">
-                  {groups.map((g) => (
-                    <button
-                      key={g.id}
-                      className={`menu-item ${g.id === activeGroupId ? 'on' : ''}`}
-                      onClick={() => {
-                        setActiveGroupId(g.id)
-                        setGroupMenu(false)
-                      }}
-                    >
-                      {g.name}
-                    </button>
-                  ))}
-                  <div className="menu-sep" />
-                  {addingGroup ? (
-                    <input
-                      className="field create-input"
-                      placeholder="새 그룹 이름"
-                      value={newGroup}
-                      autoFocus
-                      onChange={(e) => setNewGroup(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && addGroup()}
-                    />
-                  ) : (
-                    <button className="menu-item" onClick={() => setAddingGroup(true)}>
-                      + 그룹 만들기
-                    </button>
-                  )}
-                  {joining ? (
-                    <input
-                      className="field create-input"
-                      placeholder="초대 링크 또는 코드"
-                      value={joinCode}
-                      autoFocus
-                      onChange={(e) => setJoinCode(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
-                    />
-                  ) : (
-                    <button className="menu-item" onClick={() => setJoining(true)}>
-                      ↳ 코드로 참가
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-          {activeGroup && isOwner && (
+      {/* Group rail */}
+      <aside className="rail">
+        {groups.map((g) => (
+          <button
+            key={g.id}
+            className={`rail-group ${g.id === activeGroupId ? 'on' : ''}`}
+            onClick={() => switchGroup(g.id)}
+            title={g.name}
+          >
+            {g.name.slice(0, 2)}
+          </button>
+        ))}
+        <div className="rail-add-wrap">
+          <button className="rail-add" onClick={() => setRailMenu((v) => !v)} title="그룹 추가/참가">
+            +
+          </button>
+          {railMenu && (
+            <>
+              <div className="menu-catch" onClick={() => setRailMenu(false)} />
+              <div className="rail-menu glass">
+                <span className="rail-menu-label">새 그룹</span>
+                <input
+                  className="field"
+                  placeholder="그룹 이름 + Enter"
+                  value={newGroup}
+                  autoFocus
+                  onChange={(e) => setNewGroup(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addGroup()}
+                />
+                <span className="rail-menu-label">초대로 참가</span>
+                <input
+                  className="field"
+                  placeholder="초대 링크/코드 + Enter"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
+                />
+              </div>
+            </>
+          )}
+        </div>
+        <span className="rail-spacer" />
+        <button className="rail-icon" onClick={onSignOut} title="로그아웃">
+          <LogoutIcon />
+        </button>
+      </aside>
+
+      {/* Team sidebar */}
+      <aside className="sidebar">
+        <div className="sidebar-head">
+          <span className="sidebar-group">{activeGroup.name}</span>
+          {isOwner && (
             <button className="icon-btn small" onClick={() => setSettingsOpen(true)} title="그룹 설정">
               <SettingsIcon />
             </button>
           )}
         </div>
+        <div className="sidebar-nav">
+          <span className="sidebar-label">보기</span>
+          {NAV.map((n) => {
+            const Icon = n.icon
+            return (
+              <button
+                key={n.key}
+                className={`nav-item ${!active && view === n.key ? 'on' : ''}`}
+                onClick={() => goView(n.key)}
+              >
+                <Icon />
+                {n.label}
+              </button>
+            )
+          })}
 
-        {active && (
-          <div className="tb-teams">
-            {teams.map((t) => {
-              const n = (presence[t.id] ?? []).length
-              return (
-                <button
-                  key={t.id}
-                  className={`tb-chip ${t.id === activeTeamId ? 'on' : ''}`}
-                  onClick={() => enterTeam(t)}
-                >
-                  # {t.name}
-                  {n > 0 && <span className="chip-dot" />}
-                </button>
-              )
-            })}
-          </div>
-        )}
-
-        {!active && activeGroup && (
-          <div className="tb-toggle">
-            <button className={view === 'board' ? 'on' : ''} onClick={() => setView('board')}>
-              보드
-            </button>
-            <button className={view === 'docs' ? 'on' : ''} onClick={() => setView('docs')}>
-              문서
-            </button>
-            <button className={view === 'agent' ? 'on' : ''} onClick={() => setView('agent')}>
-              에이전트
-            </button>
-          </div>
-        )}
-
-        <div className="tb-right">
-          {active && (
-            <button className="btn-ghost" onClick={() => setActive(null)}>
-              보드
-            </button>
-          )}
-          <button className="avatar sm" onClick={() => setProfileOpen(true)} title="프로필 수정">
-            {profile.name.slice(0, 2)}
-          </button>
-          <button className="icon-btn small" onClick={onSignOut} title="로그아웃">
-            <LogoutIcon />
-          </button>
+          <span className="sidebar-label">팀 채널</span>
+          {teams.map((t) => {
+            const n = (presence[t.id] ?? []).length
+            return (
+              <button
+                key={t.id}
+                className={`nav-item channel ${t.id === activeTeamId ? 'on' : ''}`}
+                onClick={() => enterTeam(t)}
+              >
+                <span className="hash">#</span>
+                <span className="channel-name">{t.name}</span>
+                {n > 0 && (
+                  <span className="channel-live">
+                    <span className="live-dot" />
+                    {n}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+          <input
+            className="field channel-new"
+            placeholder="+ 팀 만들기"
+            value={newTeam}
+            onChange={(e) => setNewTeam(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && addTeam()}
+          />
         </div>
-      </header>
 
-      <div className="app-content">
+        <button className="user-card" onClick={() => setProfileOpen(true)} title="프로필 수정">
+          <span className="avatar sm">{profile.name.slice(0, 2)}</span>
+          <span className="user-meta">
+            <span className="user-name">{profile.name}</span>
+            <span className="user-role">
+              {profile.job_role || '멤버'} · {profile.language === 'en' ? 'English' : '한국어'}
+            </span>
+          </span>
+          <SettingsIcon />
+        </button>
+      </aside>
+
+      {/* Content */}
+      <main className="content">
         {pending ? (
           <Prejoin
             teamName={pending.team.name}
@@ -321,54 +372,83 @@ export function Workspace({
             startAudioOn={active.audio}
             onLeave={() => setActive(null)}
           />
-        ) : activeGroup && view === 'docs' ? (
+        ) : view === 'docs' ? (
           <DocsView groupId={activeGroup.id} lang={profile.language} />
-        ) : activeGroup && view === 'agent' ? (
+        ) : view === 'agent' ? (
           <AgentView groups={groups} activeGroupId={activeGroup.id} />
-        ) : activeGroup ? (
-          <div className="board">
-            {teams.map((t) => {
-              const here = presence[t.id] ?? []
-              return (
-                <button key={t.id} className="room-card" onClick={() => enterTeam(t)}>
-                  <div className="rc-name">
-                    <span className="hash">#</span>
-                    {t.name}
-                  </div>
-                  <div className="rc-avatars">
-                    {here.slice(0, 5).map((name, i) => (
-                      <span key={`${name}-${i}`} className="avatar sm" title={name}>
-                        {name.slice(0, 2)}
-                      </span>
-                    ))}
-                    {here.length > 5 && <span className="rc-more">+{here.length - 5}</span>}
-                    {here.length === 0 && <span className="rc-empty">비어 있음</span>}
-                  </div>
-                  <div className="rc-foot">{here.length > 0 ? `${here.length}명 참여 중` : '입장하기'}</div>
-                </button>
-              )
-            })}
-            <div className="room-card new">
-              <div className="rc-name">새 팀</div>
-              <input
-                className="field create-input"
-                placeholder="팀 이름 + Enter"
-                value={newTeam}
-                onChange={(e) => setNewTeam(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addTeam()}
-              />
-            </div>
-          </div>
         ) : (
-          <div className="ws-empty">
-            <h1 className="brand">Borderless</h1>
-            <p className="subtitle">상단에서 그룹을 만들거나 코드로 참가하세요</p>
+          <div className="board-wrap">
+            <div className="board-head">
+              <div>
+                <h1 className="board-title">팀 보드</h1>
+                <p className="board-sub">누가 어느 팀에 있는지 확인하고 바로 입장하세요.</p>
+              </div>
+            </div>
+            <div className="board">
+              {teams.map((t) => {
+                const here = presence[t.id] ?? []
+                return (
+                  <button key={t.id} className="room-card" onClick={() => enterTeam(t)}>
+                    <div className="rc-name">
+                      <span className="hash">#</span>
+                      {t.name}
+                      {here.length > 0 ? (
+                        <span className="rc-live">{here.length}명 참여 중</span>
+                      ) : (
+                        <span className="rc-idle">비어 있음</span>
+                      )}
+                    </div>
+                    <div className="rc-avatars">
+                      {here.slice(0, 5).map((name, i) => (
+                        <span key={`${name}-${i}`} className="avatar sm" title={name}>
+                          {name.slice(0, 2)}
+                        </span>
+                      ))}
+                      {here.length > 5 && <span className="rc-more">+{here.length - 5}</span>}
+                      {here.length === 0 && <span className="rc-empty">아직 아무도 없어요</span>}
+                    </div>
+                    <div className="rc-foot">입장하기</div>
+                  </button>
+                )
+              })}
+              <div className="room-card new">
+                <div className="rc-name">새 팀</div>
+                <input
+                  className="field create-input"
+                  placeholder="팀 이름 + Enter"
+                  value={newTeam}
+                  onChange={(e) => setNewTeam(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && addTeam()}
+                />
+              </div>
+            </div>
           </div>
         )}
         {error && <p className="error board-error">{error}</p>}
-      </div>
+      </main>
 
-      {settingsOpen && activeGroup && (
+      {/* Mobile bottom tabs */}
+      <nav className="mobile-tabs">
+        {NAV.map((n) => {
+          const Icon = n.icon
+          return (
+            <button
+              key={n.key}
+              className={!active && view === n.key ? 'on' : ''}
+              onClick={() => goView(n.key)}
+            >
+              <Icon />
+              {n.key === 'board' ? '보드' : n.label}
+            </button>
+          )
+        })}
+        <button onClick={() => setProfileOpen(true)}>
+          <PeopleIcon />
+          프로필
+        </button>
+      </nav>
+
+      {settingsOpen && (
         <GroupSettings
           group={activeGroup}
           teams={teams}
@@ -378,14 +458,10 @@ export function Workspace({
         />
       )}
       {profileOpen && (
-        <ProfileEdit
-          profile={profile}
-          onClose={() => setProfileOpen(false)}
-          onSaved={onProfileChange}
-        />
+        <ProfileEdit profile={profile} onClose={() => setProfileOpen(false)} onSaved={onProfileChange} />
       )}
 
-      {activeGroup && <ChatBot groupId={activeGroup.id} />}
+      <ChatBot groupId={activeGroup.id} />
     </div>
   )
 }

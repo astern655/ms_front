@@ -120,6 +120,15 @@ export const DocIcon = () => (
   </svg>
 )
 
+export const BoardIcon = () => (
+  <svg {...base}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </svg>
+)
+
 export const AiIcon = () => (
   <svg {...base}>
     <path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z" />
