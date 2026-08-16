@@ -13,12 +13,12 @@ export function Captions({
   return (
     <div className="captions">
       {recent.map((e) => (
-        <div key={e.id} className="glass caption">
-          <b>
+        <div key={e.id} className="caption">
+          <span className="caption-speaker">
             {e.speaker}
             {e.kind === 'sign' ? ' ✋' : ''}
-          </b>
-          {e.translations[displayLang] || e.sourceText}
+          </span>
+          <span className="caption-text">{e.translations[displayLang] || e.sourceText}</span>
         </div>
       ))}
     </div>

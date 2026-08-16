@@ -33,6 +33,9 @@ body {
     radial-gradient(1000px 700px at 105% 15%, rgba(var(--accent-rgb), 0.28), transparent 55%),
     linear-gradient(160deg, #0d0d12, #0b0b0f 62%);
   background-attachment: fixed;
+  /* Korean reads better without mid-word breaks */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 /* --- Liquid Glass material --- */
@@ -971,17 +974,40 @@ option {
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 16px;
-  border-radius: 34px;
+  gap: 6px;
+  padding: 10px 14px;
+  border-radius: 28px;
   z-index: 20;
 }
 
+.ctrl-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 56px;
+}
+.ctrl-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.ctrl-label.leave {
+  color: #ff8a82;
+}
+.ctrl-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.14);
+  margin: 0 3px;
+  align-self: center;
+}
 .ctrl {
   display: grid;
   place-items: center;
-  width: 56px;
-  height: 56px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.1);
@@ -1898,7 +1924,7 @@ option {
 .captions {
   position: absolute;
   left: 50%;
-  bottom: 104px;
+  bottom: 124px;
   transform: translateX(-50%);
   width: min(760px, 92vw);
   display: flex;
@@ -1911,12 +1937,27 @@ option {
 
 .caption {
   max-width: 100%;
-  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 11px 16px;
   border-radius: 14px;
-  font-size: 16px;
-  line-height: 1.35;
-  text-align: center;
+  /* Opaque + high contrast so captions stay legible over any video */
+  background: rgba(10, 10, 14, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: left;
   animation: cap-in 0.18s ease-out;
+}
+.caption-speaker {
+  color: #a68eff;
+  font-weight: 800;
+  font-size: 12px;
+}
+.caption-text {
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.45;
+  font-weight: 500;
 }
 
 @keyframes cap-in {

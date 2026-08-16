@@ -128,16 +128,19 @@ function Toggle({
 }) {
   const { enabled, pending, toggle } = useTrackToggle({ source })
   return (
-    <button
-      className={`ctrl ${enabled ? 'ctrl-on' : 'ctrl-off'}`}
-      onClick={() => toggle()}
-      disabled={pending}
-      aria-pressed={enabled}
-      aria-label={label}
-      title={label}
-    >
-      {enabled ? on : off}
-    </button>
+    <div className="ctrl-item">
+      <button
+        className={`ctrl ${enabled ? 'ctrl-on' : 'ctrl-off'}`}
+        onClick={() => toggle()}
+        disabled={pending}
+        aria-pressed={enabled}
+        aria-label={label}
+        title={label}
+      >
+        {enabled ? on : off}
+      </button>
+      <span className="ctrl-label">{label}</span>
+    </div>
   )
 }
 
@@ -188,52 +191,76 @@ function RoomInner({
         <Captions entries={captions} displayLang={lang} />
 
         <div className="glass controlbar">
-          <button
-            className={`ctrl ${mic.muted ? 'ctrl-off' : 'ctrl-on'}`}
-            onClick={mic.toggleMute}
-            aria-pressed={!mic.muted}
-            aria-label="마이크"
-            title="마이크"
-          >
-            {mic.muted ? <MicOffIcon /> : <MicIcon />}
-          </button>
+          <div className="ctrl-item">
+            <button
+              className={`ctrl ${mic.muted ? 'ctrl-off' : 'ctrl-on'}`}
+              onClick={mic.toggleMute}
+              aria-pressed={!mic.muted}
+              aria-label="마이크"
+              title="마이크"
+            >
+              {mic.muted ? <MicOffIcon /> : <MicIcon />}
+            </button>
+            <span className="ctrl-label">마이크</span>
+          </div>
           <Toggle source={Track.Source.Camera} on={<VideoIcon />} off={<VideoOffIcon />} label="카메라" />
           <Toggle source={Track.Source.ScreenShare} on={<ScreenIcon />} off={<ScreenIcon />} label="화면 공유" />
-          <button
-            className={`ctrl ${settingsOpen ? 'ctrl-on' : 'ctrl-off'}`}
-            onClick={() => setSettingsOpen((v) => !v)}
-            aria-label="설정"
-            title="설정"
-          >
-            <SettingsIcon />
-          </button>
-          <button
-            className={`ctrl ${panel === 'chat' ? 'ctrl-on' : 'ctrl-off'}`}
-            onClick={() => togglePanel('chat')}
-            aria-label="채팅·자막"
-            title="채팅·자막"
-          >
-            <ChatIcon />
-          </button>
-          <button
-            className={`ctrl ${peopleOpen ? 'ctrl-on' : 'ctrl-off'}`}
-            onClick={() => setPeopleOpen((v) => !v)}
-            aria-label="참가자"
-            title="참가자"
-          >
-            <PeopleIcon />
-          </button>
-          <button
-            className={`ctrl ${panel === 'docs' ? 'ctrl-on' : 'ctrl-off'}`}
-            onClick={() => togglePanel('docs')}
-            aria-label="문서"
-            title="문서"
-          >
-            <DocIcon />
-          </button>
-          <button className="ctrl ctrl-leave" onClick={() => room.disconnect()} aria-label="나가기" title="나가기">
-            <LeaveIcon />
-          </button>
+          <div className="ctrl-item">
+            <button
+              className={`ctrl ${settingsOpen ? 'ctrl-on' : 'ctrl-off'}`}
+              onClick={() => setSettingsOpen((v) => !v)}
+              aria-label="설정"
+              title="설정"
+            >
+              <SettingsIcon />
+            </button>
+            <span className="ctrl-label">설정</span>
+          </div>
+          <div className="ctrl-item">
+            <button
+              className={`ctrl ${panel === 'chat' ? 'ctrl-on' : 'ctrl-off'}`}
+              onClick={() => togglePanel('chat')}
+              aria-label="채팅·자막"
+              title="채팅·자막"
+            >
+              <ChatIcon />
+            </button>
+            <span className="ctrl-label">채팅·자막</span>
+          </div>
+          <div className="ctrl-item">
+            <button
+              className={`ctrl ${peopleOpen ? 'ctrl-on' : 'ctrl-off'}`}
+              onClick={() => setPeopleOpen((v) => !v)}
+              aria-label="참가자"
+              title="참가자"
+            >
+              <PeopleIcon />
+            </button>
+            <span className="ctrl-label">참가자</span>
+          </div>
+          <div className="ctrl-item">
+            <button
+              className={`ctrl ${panel === 'docs' ? 'ctrl-on' : 'ctrl-off'}`}
+              onClick={() => togglePanel('docs')}
+              aria-label="문서"
+              title="문서"
+            >
+              <DocIcon />
+            </button>
+            <span className="ctrl-label">문서</span>
+          </div>
+          <span className="ctrl-divider" />
+          <div className="ctrl-item">
+            <button
+              className="ctrl ctrl-leave"
+              onClick={() => room.disconnect()}
+              aria-label="나가기"
+              title="나가기"
+            >
+              <LeaveIcon />
+            </button>
+            <span className="ctrl-label leave">나가기</span>
+          </div>
         </div>
 
         {/* Sheets overlay only the stage (never the dock), so they follow the video area. */}
