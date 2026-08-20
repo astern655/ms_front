@@ -32,6 +32,13 @@ const NAV: { key: View; label: string; icon: () => ReactElement }[] = [
   { key: 'docs', label: '문서', icon: DocIcon },
 ]
 
+type Status = 'online' | 'away' | 'dnd'
+const STATUS: Record<Status, { label: string; color: string }> = {
+  online: { label: '온라인', color: '#30d158' },
+  away: { label: '자리 비움', color: '#ffcf3f' },
+  dnd: { label: '방해 금지', color: '#ff453a' },
+}
+
 export function Workspace({
   profile,
   onSignOut,
@@ -60,11 +67,23 @@ export function Workspace({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [view, setView] = useState<View>('board')
+  const [status, setStatus] = useState<Status>(
+    () => (localStorage.getItem('borderless.status') as Status) || 'online',
+  )
+  const [statusMenu, setStatusMenu] = useState(false)
+  const changeStatus = (s: Status) => {
+    setStatus(s)
+    localStorage.setItem('borderless.status', s)
+    setStatusMenu(false)
+    channelRef.current?.track({ teamId: activeTeamId, name: profile.name, status: s })
+  }
 
   const channelRef = useRef<RealtimeChannel | null>(null)
   const activeTeamId = active?.team.id ?? null
   const activeTeamRef = useRef<string | null>(null)
   activeTeamRef.current = activeTeamId
+  const statusRef = useRef<Status>('online')
+  statusRef.current = status
 
   useEffect(() => {
     listGroups()
@@ -99,8 +118,9 @@ export function Workspace({
       }
       setPresence(map)
     })
-    ch.subscribe((status) => {
-      if (status === 'SUBSCRIBED') ch.track({ teamId: activeTeamRef.current, name: profile.name })
+    ch.subscribe((s) => {
+      if (s === 'SUBSCRIBED')
+        ch.track({ teamId: activeTeamRef.current, name: profile.name, status: statusRef.current })
     })
     channelRef.current = ch
     return () => {
@@ -111,7 +131,7 @@ export function Workspace({
 
   // Broadcast which team I'm in whenever it changes.
   useEffect(() => {
-    channelRef.current?.track({ teamId: activeTeamId, name: profile.name })
+    channelRef.current?.track({ teamId: activeTeamId, name: profile.name, status: statusRef.current })
   }, [activeTeamId, profile.name])
 
   const activeGroup = groups.find((g) => g.id === activeGroupId) ?? null
@@ -334,16 +354,34 @@ export function Workspace({
           />
         </div>
 
-        <button className="user-card" onClick={() => setProfileOpen(true)} title="프로필 수정">
-          <span className="avatar sm">{profile.name.slice(0, 2)}</span>
-          <span className="user-meta">
+        <div className="user-card">
+          <button className="user-avatar-btn" onClick={() => setStatusMenu((v) => !v)} title="상태 변경">
+            <span className="avatar sm">{profile.name.slice(0, 2)}</span>
+            <span className="status-dot" style={{ background: STATUS[status].color }} />
+          </button>
+          {statusMenu && (
+            <>
+              <div className="menu-catch" onClick={() => setStatusMenu(false)} />
+              <div className="status-menu glass">
+                {(Object.keys(STATUS) as Status[]).map((s) => (
+                  <button key={s} className={status === s ? 'on' : ''} onClick={() => changeStatus(s)}>
+                    <span className="status-dot" style={{ background: STATUS[s].color }} />
+                    {STATUS[s].label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          <button className="user-meta" onClick={() => setProfileOpen(true)} title="프로필 수정">
             <span className="user-name">{profile.name}</span>
             <span className="user-role">
-              {profile.job_role || '멤버'} · {profile.language === 'en' ? 'English' : '한국어'}
+              {STATUS[status].label} · {profile.language === 'en' ? 'English' : '한국어'}
             </span>
-          </span>
-          <SettingsIcon />
-        </button>
+          </button>
+          <button className="icon-btn small" onClick={() => setProfileOpen(true)} title="프로필 수정">
+            <SettingsIcon />
+          </button>
+        </div>
       </aside>
 
       {/* Content */}
