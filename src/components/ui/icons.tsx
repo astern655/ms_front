@@ -158,3 +158,13 @@ export const BellIcon = () => (
     <path d="M13.7 21a2 2 0 0 1-3.4 0" />
   </svg>
 )
+
+export const BellOffIcon = () => (
+  <svg {...base}>
+    <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+    <path d="M18.6 13A19 19 0 0 1 18 8" />
+    <path d="M6 8a6 6 0 0 1 9.3-5" />
+    <path d="M6 8c0 7-3 9-3 9h13" />
+    <path d="M3 3l18 18" />
+  </svg>
+)

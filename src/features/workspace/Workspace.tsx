@@ -20,7 +20,8 @@ import { DocsView } from '../docs/DocsView'
 import { TeamChat } from '../chat/TeamChat'
 import { ChatBot } from '../agent/ChatBot'
 import { NotificationsBell } from '../notifications/NotificationsBell'
-import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon } from '../../components/ui/icons'
+import { listMutedTeams, setMuted } from '../chat/mutes'
+import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon, BellOffIcon } from '../../components/ui/icons'
 
 const serverUrl =
   (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
@@ -62,6 +63,7 @@ export function Workspace({
   const [pending, setPending] = useState<{ team: Team; token: string } | null>(null)
   const [channelTeam, setChannelTeam] = useState<Team | null>(null)
   const [presence, setPresence] = useState<Record<string, string[]>>({})
+  const [mutedTeams, setMutedTeams] = useState<Set<string>>(new Set())
   const [error, setError] = useState('')
   const [newGroup, setNewGroup] = useState('')
   const [newTeam, setNewTeam] = useState('')
@@ -157,6 +159,21 @@ export function Workspace({
     setActive(null)
     setChannelTeam(t)
   }
+
+  const toggleMute = async (teamId: string) => {
+    const next = !mutedTeams.has(teamId)
+    setMutedTeams((prev) => {
+      const s = new Set(prev)
+      if (next) s.add(teamId)
+      else s.delete(teamId)
+      return s
+    })
+    setMuted(profile.id, teamId, next).catch(() => {})
+  }
+
+  useEffect(() => {
+    listMutedTeams(profile.id).then(setMutedTeams).catch(() => {})
+  }, [profile.id])
 
   const addGroup = async () => {
     const name = newGroup.trim()
@@ -339,21 +356,31 @@ export function Workspace({
           <span className="sidebar-label">팀 채널</span>
           {teams.map((t) => {
             const n = (presence[t.id] ?? []).length
+            const muted = mutedTeams.has(t.id)
             return (
-              <button
-                key={t.id}
-                className={`nav-item channel ${t.id === activeTeamId || (!active && channelTeam?.id === t.id) ? 'on' : ''}`}
-                onClick={() => openChannel(t)}
-              >
-                <span className="hash">#</span>
-                <span className="channel-name">{t.name}</span>
-                {n > 0 && (
-                  <span className="channel-live">
-                    <span className="live-dot" />
-                    {n}
-                  </span>
-                )}
-              </button>
+              <div key={t.id} className={`channel-row ${muted ? 'muted' : ''}`}>
+                <button
+                  className={`nav-item channel ${t.id === activeTeamId || (!active && channelTeam?.id === t.id) ? 'on' : ''}`}
+                  onClick={() => openChannel(t)}
+                >
+                  <span className="hash">#</span>
+                  <span className="channel-name">{t.name}</span>
+                  {n > 0 && !muted && (
+                    <span className="channel-live">
+                      <span className="live-dot" />
+                      {n}
+                    </span>
+                  )}
+                </button>
+                <button
+                  className="channel-mute"
+                  onClick={() => toggleMute(t.id)}
+                  title={muted ? '알림 켜기' : '알림 음소거'}
+                  aria-label={muted ? '알림 켜기' : '알림 음소거'}
+                >
+                  <BellOffIcon />
+                </button>
+              </div>
             )
           })}
           <input
