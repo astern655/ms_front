@@ -15,7 +15,11 @@ export function startMic(
     chunkMs?: number
   },
 ): () => void {
-  const chunkMs = opts.chunkMs ?? 4000
+  // Longer chunks give the transcriber more context (fewer clipped words).
+  const chunkMs = opts.chunkMs ?? 6000
+  // Skip near-silent chunks: transcribing silence/noise makes the model hallucinate
+  // phrases (often in a random language). Real speech is well above this size.
+  const MIN_BYTES = 6000
   let stopped = false
   let recorder: MediaRecorder | undefined
   let stream: MediaStream | undefined
@@ -65,7 +69,7 @@ export function startMic(
       }
       recorder.onstop = async () => {
         const blob = new Blob(chunks, { type: 'audio/webm' })
-        if (!stopped && blob.size > 1200) await send(blob)
+        if (!stopped && blob.size > MIN_BYTES) await send(blob)
         cycle()
       }
       recorder.start()
