@@ -17,6 +17,7 @@ import {
 import { GroupSettings } from '../groups/GroupSettings'
 import { ProfileEdit } from '../groups/ProfileEdit'
 import { DocsView } from '../docs/DocsView'
+import { TeamChat } from '../chat/TeamChat'
 import { ChatBot } from '../agent/ChatBot'
 import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon } from '../../components/ui/icons'
 
@@ -58,6 +59,7 @@ export function Workspace({
     audio: boolean
   } | null>(null)
   const [pending, setPending] = useState<{ team: Team; token: string } | null>(null)
+  const [channelTeam, setChannelTeam] = useState<Team | null>(null)
   const [presence, setPresence] = useState<Record<string, string[]>>({})
   const [error, setError] = useState('')
   const [newGroup, setNewGroup] = useState('')
@@ -140,12 +142,19 @@ export function Workspace({
   const switchGroup = (id: string) => {
     setActiveGroupId(id)
     setActive(null)
+    setChannelTeam(null)
     setView('board')
   }
 
   const goView = (v: View) => {
     setActive(null)
+    setChannelTeam(null)
     setView(v)
+  }
+
+  const openChannel = (t: Team) => {
+    setActive(null)
+    setChannelTeam(t)
   }
 
   const addGroup = async () => {
@@ -316,7 +325,7 @@ export function Workspace({
             return (
               <button
                 key={n.key}
-                className={`nav-item ${!active && view === n.key ? 'on' : ''}`}
+                className={`nav-item ${!active && !channelTeam && view === n.key ? 'on' : ''}`}
                 onClick={() => goView(n.key)}
               >
                 <Icon />
@@ -331,8 +340,8 @@ export function Workspace({
             return (
               <button
                 key={t.id}
-                className={`nav-item channel ${t.id === activeTeamId ? 'on' : ''}`}
-                onClick={() => enterTeam(t)}
+                className={`nav-item channel ${t.id === activeTeamId || (!active && channelTeam?.id === t.id) ? 'on' : ''}`}
+                onClick={() => openChannel(t)}
               >
                 <span className="hash">#</span>
                 <span className="channel-name">{t.name}</span>
@@ -408,6 +417,16 @@ export function Workspace({
             startAudioOn={active.audio}
             onLeave={() => setActive(null)}
           />
+        ) : channelTeam ? (
+          <TeamChat
+            key={channelTeam.id}
+            groupId={activeGroup.id}
+            teamId={channelTeam.id}
+            teamName={channelTeam.name}
+            userId={profile.id}
+            userName={profile.name}
+            onEnterMeeting={() => enterTeam(channelTeam)}
+          />
         ) : view === 'docs' ? (
           <DocsView groupId={activeGroup.id} lang={profile.language} />
         ) : (
@@ -468,7 +487,7 @@ export function Workspace({
           return (
             <button
               key={n.key}
-              className={!active && view === n.key ? 'on' : ''}
+              className={!active && !channelTeam && view === n.key ? 'on' : ''}
               onClick={() => goView(n.key)}
             >
               <Icon />
