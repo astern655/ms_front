@@ -15,6 +15,7 @@ import { RoomEvent, Track, type RemoteAudioTrack, type LocalVideoTrack } from 'l
 import { BackgroundBlur } from '@livekit/track-processors'
 import { Captions } from './Captions'
 import { WaitingRoom } from './WaitingRoom'
+import { API_BASE } from '../../lib/api'
 import { SettingsSheet } from './SettingsSheet'
 import { ChatFeed } from './ChatPanel'
 import { DocsView } from '../docs/DocsView'
@@ -149,6 +150,9 @@ function Toggle({
   )
 }
 
+const BREAKOUTS = ['b1', 'b2', 'b3']
+const breakoutLabel = (s: string) => `그룹 ${s.replace('b', '')}`
+
 function RoomInner({
   name,
   userId,
@@ -156,6 +160,9 @@ function RoomInner({
   groupId,
   teamId,
   startAudioOn,
+  breakoutEnabled = false,
+  roomSuffix = '',
+  onSwitchBreakout,
 }: {
   name: string
   userId?: string
@@ -163,7 +170,11 @@ function RoomInner({
   groupId: string
   teamId?: string
   startAudioOn: boolean
+  breakoutEnabled?: boolean
+  roomSuffix?: string
+  onSwitchBreakout?: (suffix: string) => void
 }) {
+  const [breakoutOpen, setBreakoutOpen] = useState(false)
   const room = useRoomContext()
   const [micDeviceId, setMicDeviceId] = useState<string | undefined>(undefined)
   const [speakerVolume, setSpeakerVolume] = useState(100)
@@ -232,6 +243,14 @@ function RoomInner({
       <div className="stage-area">
         <Stage />
         {teamId && <WaitingRoom teamId={teamId} />}
+        {roomSuffix && (
+          <div className="breakout-banner glass">
+            <span>브레이크아웃 · {breakoutLabel(roomSuffix)}</span>
+            <button className="btn-mini" onClick={() => onSwitchBreakout?.('')}>
+              메인으로 돌아가기
+            </button>
+          </div>
+        )}
         <Captions entries={captions} displayLang={lang} />
 
         <div className="glass controlbar">
@@ -295,6 +314,48 @@ function RoomInner({
             </button>
             <span className="ctrl-label">배경 흐림</span>
           </div>
+          {breakoutEnabled && (
+            <div className="ctrl-item breakout-ctrl">
+              <button
+                className={`ctrl ${roomSuffix ? 'ctrl-on' : 'ctrl-off'}`}
+                onClick={() => setBreakoutOpen((v) => !v)}
+                aria-label="브레이크아웃"
+                title="브레이크아웃 룸"
+              >
+                <PeopleIcon />
+              </button>
+              <span className="ctrl-label">브레이크아웃</span>
+              {breakoutOpen && (
+                <>
+                  <div className="menu-catch" onClick={() => setBreakoutOpen(false)} />
+                  <div className="breakout-menu glass">
+                    <div className="breakout-menu-head">브레이크아웃 룸</div>
+                    <button
+                      className={`breakout-opt ${!roomSuffix ? 'on' : ''}`}
+                      onClick={() => {
+                        onSwitchBreakout?.('')
+                        setBreakoutOpen(false)
+                      }}
+                    >
+                      메인 룸
+                    </button>
+                    {BREAKOUTS.map((b) => (
+                      <button
+                        key={b}
+                        className={`breakout-opt ${roomSuffix === b ? 'on' : ''}`}
+                        onClick={() => {
+                          onSwitchBreakout?.(b)
+                          setBreakoutOpen(false)
+                        }}
+                      >
+                        {breakoutLabel(b)}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
           <div className="ctrl-item">
             <button
               className={`ctrl ${peopleOpen ? 'ctrl-on' : 'ctrl-off'}`}
@@ -392,18 +453,64 @@ export function RoomView({
   startAudioOn?: boolean
   onLeave: () => void
 }) {
+  // Breakout rooms = separate LiveKit rooms. Switching re-mints a token for the
+  // sub-room and remounts LiveKitRoom (keyed by suffix); the disconnect from the
+  // remount is ignored so it isn't mistaken for leaving the meeting.
+  const [roomSuffix, setRoomSuffix] = useState('')
+  const [activeToken, setActiveToken] = useState(token)
+  const switchingRef = useRef(false)
+
+  const switchTo = async (suffix: string) => {
+    if (suffix === roomSuffix || !userId) return
+    switchingRef.current = true
+    if (!suffix) {
+      setActiveToken(token)
+      setRoomSuffix('')
+      return
+    }
+    try {
+      const room = `team:${teamId}:${suffix}`
+      const res = await fetch(
+        `${API_BASE}/api/token?room=${encodeURIComponent(room)}` +
+          `&identity=${encodeURIComponent(userId)}&name=${encodeURIComponent(name)}`,
+      )
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'token error')
+      setActiveToken(data.token)
+      setRoomSuffix(suffix)
+    } catch {
+      switchingRef.current = false
+    }
+  }
+
   return (
     <LiveKitRoom
+      key={roomSuffix}
       className="room"
-      token={token}
+      token={activeToken}
       serverUrl={serverUrl}
       connect
       video={startVideo}
       audio={false}
-      onDisconnected={onLeave}
+      onConnected={() => {
+        switchingRef.current = false
+      }}
+      onDisconnected={() => {
+        if (!switchingRef.current) onLeave()
+      }}
     >
       <RoomAudioRenderer />
-      <RoomInner name={name} userId={userId} lang={lang} groupId={groupId} teamId={teamId} startAudioOn={startAudioOn} />
+      <RoomInner
+        name={name}
+        userId={userId}
+        lang={lang}
+        groupId={groupId}
+        teamId={teamId}
+        startAudioOn={startAudioOn}
+        breakoutEnabled={!!teamId && !!userId}
+        roomSuffix={roomSuffix}
+        onSwitchBreakout={switchTo}
+      />
     </LiveKitRoom>
   )
 }

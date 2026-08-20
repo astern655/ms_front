@@ -2099,6 +2099,59 @@ option {
     transform: rotate(360deg);
   }
 }
+.breakout-banner {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 8px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.breakout-ctrl {
+  position: relative;
+}
+.breakout-menu {
+  position: absolute;
+  bottom: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 12px;
+}
+.breakout-menu-head {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+  padding: 4px 8px 6px;
+}
+.breakout-opt {
+  text-align: left;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.breakout-opt:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.breakout-opt.on {
+  background: rgba(var(--accent-rgb), 0.18);
+  color: var(--accent-2);
+}
 .waitroom {
   position: absolute;
   top: 16px;
