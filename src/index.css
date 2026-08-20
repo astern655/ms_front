@@ -2471,6 +2471,14 @@ option {
   width: 100%;
 }
 
+/* Active speaker highlight (#9) — accent ring on the speaking tile */
+.lk-participant-tile[data-lk-speaking='true'] {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.25);
+  border-radius: 16px;
+}
+
 .lk-participant-tile {
   border-radius: 20px;
   overflow: hidden;
