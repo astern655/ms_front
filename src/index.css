@@ -2146,6 +2146,50 @@ option {
   width: 100%;
   margin-bottom: 6px;
 }
+.docs-new {
+  position: relative;
+  display: flex;
+  gap: 6px;
+}
+.docs-new .btn-mini {
+  width: auto;
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 6px;
+}
+.docs-new-caret {
+  flex: 0 0 40px;
+}
+.docs-tpl-menu {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 12px;
+}
+.docs-tpl-menu button {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  padding: 8px 11px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.docs-tpl-menu button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+.docs-search {
+  margin-bottom: 8px;
+  padding: 9px 11px;
+  font-size: 13px;
+}
 
 .doc-item {
   text-align: left;
