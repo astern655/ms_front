@@ -69,6 +69,8 @@ export function Workspace({
   } | null>(null)
   const [pending, setPending] = useState<{ team: Team; token: string } | null>(null)
   const [waiting, setWaiting] = useState<{ team: Team; requestId: string } | null>(null)
+  // Keep the meeting connected in the background when navigating to other views.
+  const [meetingMinimized, setMeetingMinimized] = useState(false)
   const [channelTeam, setChannelTeam] = useState<Team | null>(null)
   const [dmPeer, setDmPeer] = useState<Member | null>(null)
   const [members, setMembers] = useState<Member[]>([])
@@ -153,29 +155,31 @@ export function Workspace({
   const activeGroup = groups.find((g) => g.id === activeGroupId) ?? null
   const isOwner = !!activeGroup && activeGroup.owner_id === profile.id
 
+  // Changing group leaves the meeting; navigating between views keeps it running (minimized).
   const switchGroup = (id: string) => {
     setActiveGroupId(id)
     setActive(null)
+    setMeetingMinimized(false)
     setChannelTeam(null)
     setDmPeer(null)
     setView('board')
   }
 
   const goView = (v: View) => {
-    setActive(null)
+    if (active) setMeetingMinimized(true)
     setChannelTeam(null)
     setDmPeer(null)
     setView(v)
   }
 
   const openChannel = (t: Team) => {
-    setActive(null)
+    if (active) setMeetingMinimized(true)
     setDmPeer(null)
     setChannelTeam(t)
   }
 
   const openDM = (m: Member) => {
-    setActive(null)
+    if (active) setMeetingMinimized(true)
     setChannelTeam(null)
     setDmPeer(m)
   }
@@ -484,32 +488,48 @@ export function Workspace({
 
       {/* Content */}
       <main className="content">
-        {pending ? (
-          <Prejoin
-            teamName={pending.team.name}
-            name={profile.name}
-            onCancel={() => setPending(null)}
-            onJoin={({ video, audio }) => {
-              setActive({ team: pending.team, token: pending.token, video, audio })
-              setPending(null)
-            }}
-          />
-        ) : active ? (
-          <RoomView
-            key={active.team.id}
-            serverUrl={serverUrl}
-            token={active.token}
-            name={profile.name}
-            userId={profile.id}
-            lang={profile.language}
-            groupId={active.team.group_id}
-            teamId={active.team.id}
-            canHost={activeGroup.owner_id === profile.id}
-            startVideo={active.video}
-            startAudioOn={active.audio}
-            onLeave={() => setActive(null)}
-          />
-        ) : channelTeam ? (
+        {/* Meeting stays mounted (connected) while active; hidden—not unmounted—when minimized. */}
+        {active && (
+          <div className={`meeting-host ${meetingMinimized ? 'minimized' : ''}`}>
+            <RoomView
+              key={active.team.id}
+              serverUrl={serverUrl}
+              token={active.token}
+              name={profile.name}
+              userId={profile.id}
+              lang={profile.language}
+              groupId={active.team.group_id}
+              teamId={active.team.id}
+              canHost={activeGroup.owner_id === profile.id}
+              startVideo={active.video}
+              startAudioOn={active.audio}
+              onLeave={() => {
+                setActive(null)
+                setMeetingMinimized(false)
+              }}
+            />
+          </div>
+        )}
+        {active && meetingMinimized && (
+          <button className="meeting-return" onClick={() => setMeetingMinimized(false)}>
+            <span className="meeting-return-dot" />
+            {t('회의 진행 중 · 돌아가기', 'In meeting · Return')}
+          </button>
+        )}
+
+        {(!active || meetingMinimized) &&
+          (pending ? (
+            <Prejoin
+              teamName={pending.team.name}
+              name={profile.name}
+              onCancel={() => setPending(null)}
+              onJoin={({ video, audio }) => {
+                setActive({ team: pending.team, token: pending.token, video, audio })
+                setPending(null)
+                setMeetingMinimized(false)
+              }}
+            />
+          ) : channelTeam ? (
           <TeamChat
             key={channelTeam.id}
             groupId={activeGroup.id}
@@ -590,7 +610,7 @@ export function Workspace({
               </div>
             </div>
           </div>
-        )}
+        ))}
         {error && <p className="error board-error">{error}</p>}
       </main>
 

@@ -1830,6 +1830,9 @@ option {
   left: 0;
   width: 288px;
   max-width: calc(100vw - 24px);
+  background: rgba(24, 24, 30, 0.98);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
   max-height: 380px;
   display: flex;
   flex-direction: column;
@@ -2374,6 +2377,53 @@ option {
   overflow: hidden;
 }
 
+/* Meeting host: fills the content area; kept mounted (audio stays live) when minimized. */
+.meeting-host {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+}
+.meeting-host.minimized {
+  display: none;
+}
+/* Floating "return to meeting" pill when the meeting runs in the background. */
+.meeting-return {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.4);
+}
+.meeting-return-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: meeting-pulse 1.4s ease-in-out infinite;
+}
+@keyframes meeting-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
 /* Board with header inside content */
 .board-wrap {
   position: absolute;
@@ -2827,6 +2877,10 @@ option {
   gap: 2px;
   padding: 6px;
   border-radius: 12px;
+  /* Opaque so the document list behind doesn't bleed through the glass */
+  background: rgba(24, 24, 30, 0.98);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
 }
 .docs-tpl-menu button {
   border: 0;

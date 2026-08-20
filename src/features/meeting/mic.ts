@@ -15,11 +15,12 @@ export function startMic(
     chunkMs?: number
   },
 ): () => void {
-  // Longer chunks give the transcriber more context (fewer clipped words).
-  const chunkMs = opts.chunkMs ?? 6000
+  // 4s balances latency vs. context. Recording and STT no longer block each other (see onstop),
+  // so chunks stay back-to-back with no audio gap.
+  const chunkMs = opts.chunkMs ?? 4000
   // Skip near-silent chunks: transcribing silence/noise makes the model hallucinate
   // phrases (often in a random language). Real speech is well above this size.
-  const MIN_BYTES = 6000
+  const MIN_BYTES = 4000
   let stopped = false
   let recorder: MediaRecorder | undefined
   let stream: MediaStream | undefined
@@ -67,9 +68,11 @@ export function startMic(
       recorder.ondataavailable = (e) => {
         if (e.data.size) chunks.push(e.data)
       }
-      recorder.onstop = async () => {
+      recorder.onstop = () => {
         const blob = new Blob(chunks, { type: 'audio/webm' })
-        if (!stopped && blob.size > MIN_BYTES) await send(blob)
+        // Fire STT without awaiting so the next chunk records immediately — no gap in
+        // audio and no added latency while the previous chunk transcribes.
+        if (!stopped && blob.size > MIN_BYTES) void send(blob)
         cycle()
       }
       recorder.start()
