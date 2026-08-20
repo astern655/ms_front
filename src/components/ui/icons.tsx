@@ -159,6 +159,15 @@ export const BellIcon = () => (
   </svg>
 )
 
+export const BlurIcon = () => (
+  <svg {...base}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 3v18" />
+    <path d="M12 8a4 4 0 0 0 0 8" />
+    <path d="M12 5.5a6.5 6.5 0 0 0 0 13" opacity="0.5" />
+  </svg>
+)
+
 export const BellOffIcon = () => (
   <svg {...base}>
     <path d="M13.7 21a2 2 0 0 1-3.4 0" />

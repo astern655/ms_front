@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode, type MouseEvent as ReactMouseEvent } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type MouseEvent as ReactMouseEvent } from 'react'
 import '@livekit/components-styles'
 import {
   LiveKitRoom,
@@ -9,8 +9,10 @@ import {
   useTrackToggle,
   useRoomContext,
   useParticipants,
+  useLocalParticipant,
 } from '@livekit/components-react'
-import { RoomEvent, Track, type RemoteAudioTrack } from 'livekit-client'
+import { RoomEvent, Track, type RemoteAudioTrack, type LocalVideoTrack } from 'livekit-client'
+import { BackgroundBlur } from '@livekit/track-processors'
 import { Captions } from './Captions'
 import { SettingsSheet } from './SettingsSheet'
 import { ChatFeed } from './ChatPanel'
@@ -30,6 +32,7 @@ import {
   CloseIcon,
   DocIcon,
   SignIcon,
+  BlurIcon,
 } from '../../components/ui/icons'
 
 function ParticipantsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -164,6 +167,7 @@ function RoomInner({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [peopleOpen, setPeopleOpen] = useState(false)
   const [signOn, setSignOn] = useState(false)
+  const [blurOn, setBlurOn] = useState(false)
   const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
   const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
   const [dockWidth, setDockWidth] = useState(() =>
@@ -186,6 +190,33 @@ function RoomInner({
 
   const mic = useLocalMic(room, micDeviceId, !startAudioOn)
   useSpeakerVolume(speakerVolume / 100)
+  const { localParticipant } = useLocalParticipant()
+  const blurRef = useRef<ReturnType<typeof BackgroundBlur> | null>(null)
+  const cameraSid = localParticipant.getTrackPublication(Track.Source.Camera)?.trackSid
+
+  // Apply/remove the client-side background blur processor on the local camera track.
+  useEffect(() => {
+    const track = localParticipant.getTrackPublication(Track.Source.Camera)?.track as
+      | LocalVideoTrack
+      | undefined
+    if (!track) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        if (blurOn) {
+          if (!blurRef.current) blurRef.current = BackgroundBlur(10)
+          if (!cancelled) await track.setProcessor(blurRef.current)
+        } else if (track.getProcessor()) {
+          await track.stopProcessor()
+        }
+      } catch {
+        /* processor unsupported on this device — ignore */
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [blurOn, localParticipant, cameraSid])
   const captions = useCaptions(room, {
     speaker: name,
     sourceLang: lang,
@@ -247,6 +278,18 @@ function RoomInner({
               <SignIcon />
             </button>
             <span className="ctrl-label">수화</span>
+          </div>
+          <div className="ctrl-item">
+            <button
+              className={`ctrl ${blurOn ? 'ctrl-on' : 'ctrl-off'}`}
+              onClick={() => setBlurOn((v) => !v)}
+              aria-pressed={blurOn}
+              aria-label="배경 흐림"
+              title="배경 흐림"
+            >
+              <BlurIcon />
+            </button>
+            <span className="ctrl-label">배경 흐림</span>
           </div>
           <div className="ctrl-item">
             <button
