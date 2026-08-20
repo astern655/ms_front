@@ -2099,6 +2099,15 @@ option {
     transform: rotate(360deg);
   }
 }
+.roster-host {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+.btn-mini.ghost.danger {
+  color: var(--danger);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+}
 .breakout-banner {
   position: absolute;
   top: 16px;

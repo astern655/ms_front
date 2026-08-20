@@ -526,6 +526,7 @@ export function Workspace({
             lang={profile.language}
             groupId={active.team.group_id}
             teamId={active.team.id}
+            canHost={activeGroup.owner_id === profile.id}
             startVideo={active.video}
             startAudioOn={active.audio}
             onLeave={() => setActive(null)}

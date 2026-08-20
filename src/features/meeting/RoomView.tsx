@@ -37,8 +37,26 @@ import {
   BlurIcon,
 } from '../../components/ui/icons'
 
-function ParticipantsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+function ParticipantsSheet({
+  open,
+  onClose,
+  canHost = false,
+  room,
+}: {
+  open: boolean
+  onClose: () => void
+  canHost?: boolean
+  room?: string
+}) {
   const participants = useParticipants()
+  const hostAction = (action: 'mute' | 'remove', identity: string) => {
+    if (!room) return
+    fetch(`${API_BASE}/api/room/${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ room, identity }),
+    }).catch(() => {})
+  }
   if (!open) return null
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -60,6 +78,16 @@ function ParticipantsSheet({ open, onClose }: { open: boolean; onClose: () => vo
               <span className={`roster-mic ${p.isMicrophoneEnabled ? 'on' : 'off'}`}>
                 {p.isMicrophoneEnabled ? <MicIcon /> : <MicOffIcon />}
               </span>
+              {canHost && !p.isLocal && (
+                <span className="roster-host">
+                  <button className="btn-mini ghost" onClick={() => hostAction('mute', p.identity)}>
+                    음소거
+                  </button>
+                  <button className="btn-mini ghost danger" onClick={() => hostAction('remove', p.identity)}>
+                    내보내기
+                  </button>
+                </span>
+              )}
             </div>
           ))}
         </div>
@@ -163,6 +191,7 @@ function RoomInner({
   breakoutEnabled = false,
   roomSuffix = '',
   onSwitchBreakout,
+  canHost = false,
 }: {
   name: string
   userId?: string
@@ -173,8 +202,10 @@ function RoomInner({
   breakoutEnabled?: boolean
   roomSuffix?: string
   onSwitchBreakout?: (suffix: string) => void
+  canHost?: boolean
 }) {
   const [breakoutOpen, setBreakoutOpen] = useState(false)
+  const roomName = teamId ? `team:${teamId}${roomSuffix ? ':' + roomSuffix : ''}` : undefined
   const room = useRoomContext()
   const [micDeviceId, setMicDeviceId] = useState<string | undefined>(undefined)
   const [speakerVolume, setSpeakerVolume] = useState(100)
@@ -393,7 +424,12 @@ function RoomInner({
         </div>
 
         {/* Sheets overlay only the stage (never the dock), so they follow the video area. */}
-        <ParticipantsSheet open={peopleOpen} onClose={() => setPeopleOpen(false)} />
+        <ParticipantsSheet
+          open={peopleOpen}
+          onClose={() => setPeopleOpen(false)}
+          canHost={canHost}
+          room={roomName}
+        />
         <SettingsSheet
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
@@ -438,6 +474,7 @@ export function RoomView({
   lang,
   groupId,
   teamId,
+  canHost = false,
   startVideo = true,
   startAudioOn = true,
   onLeave,
@@ -449,6 +486,7 @@ export function RoomView({
   lang: string
   groupId: string
   teamId?: string
+  canHost?: boolean
   startVideo?: boolean
   startAudioOn?: boolean
   onLeave: () => void
@@ -510,6 +548,7 @@ export function RoomView({
         breakoutEnabled={!!teamId && !!userId}
         roomSuffix={roomSuffix}
         onSwitchBreakout={switchTo}
+        canHost={canHost}
       />
     </LiveKitRoom>
   )
