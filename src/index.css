@@ -1420,6 +1420,16 @@ option {
   color: var(--accent);
   flex: 0 0 auto;
 }
+.role-chip.admin {
+  background: rgba(48, 209, 88, 0.18);
+  color: #30d158;
+}
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
 
 .invite-field {
   display: flex;

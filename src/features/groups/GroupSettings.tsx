@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   getGroupMembers,
   removeGroupMember,
+  setMemberRole,
   renameGroup,
   deleteTeam,
   type Group,
@@ -61,6 +62,17 @@ export function GroupSettings({
     }
   }
 
+  const isOwner = meId === group.owner_id
+
+  const changeRole = async (userId: string, role: string) => {
+    try {
+      await setMemberRole(group.id, userId, role)
+      loadMembers()
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const removeTeam = async (teamId: string) => {
     try {
       await deleteTeam(teamId)
@@ -103,23 +115,36 @@ export function GroupSettings({
 
         <section className="setting-group">
           <div className="section-title">멤버 · {members.length}</div>
-          {members.map((m) => (
-            <div key={m.user_id} className="list-row">
-              <span className="member-row-left">
-                <span className="avatar sm">{(m.name || '?').slice(0, 2)}</span>
-                <span className="name">
-                  {m.name}
-                  {m.job_role && m.user_id !== group.owner_id ? ` · ${m.job_role}` : ''}
+          {members.map((m) => {
+            const isMemberOwner = m.user_id === group.owner_id
+            const isAdmin = m.role === 'admin'
+            return (
+              <div key={m.user_id} className="list-row">
+                <span className="member-row-left">
+                  <span className="avatar sm">{(m.name || '?').slice(0, 2)}</span>
+                  <span className="name">
+                    {m.name}
+                    {m.job_role && !isMemberOwner ? ` · ${m.job_role}` : ''}
+                  </span>
+                  {isMemberOwner ? (
+                    <span className="role-chip">대표</span>
+                  ) : (
+                    isAdmin && <span className="role-chip admin">관리자</span>
+                  )}
                 </span>
-                {m.user_id === group.owner_id && <span className="role-chip">대표</span>}
-              </span>
-              {m.user_id !== group.owner_id && m.user_id !== meId && (
-                <button className="danger-btn" onClick={() => kick(m.user_id)}>
-                  내보내기
-                </button>
-              )}
-            </div>
-          ))}
+                {isOwner && !isMemberOwner && (
+                  <span className="row-actions">
+                    <button className="btn-mini ghost" onClick={() => changeRole(m.user_id, isAdmin ? 'member' : 'admin')}>
+                      {isAdmin ? '관리자 해제' : '관리자 지정'}
+                    </button>
+                    <button className="danger-btn" onClick={() => kick(m.user_id)}>
+                      내보내기
+                    </button>
+                  </span>
+                )}
+              </div>
+            )
+          })}
         </section>
 
         <section className="setting-group">

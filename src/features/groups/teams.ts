@@ -2,7 +2,7 @@ import { supabase } from '../../lib/supabase'
 
 export type Group = { id: string; name: string; owner_id: string; invite_code: string | null }
 export type Team = { id: string; group_id: string; name: string }
-export type Member = { user_id: string; name: string; job_role: string | null }
+export type Member = { user_id: string; name: string; job_role: string | null; role: string }
 
 export async function listGroups(): Promise<Group[]> {
   const { data, error } = await supabase.from('groups').select('*').order('created_at')
@@ -55,13 +55,28 @@ export async function ensureTeamMembership(teamId: string, userId: string): Prom
 export async function getGroupMembers(groupId: string): Promise<Member[]> {
   const { data, error } = await supabase
     .from('group_members')
-    .select('user_id, profiles(name, job_role)')
+    .select('user_id, role, profiles(name, job_role)')
     .eq('group_id', groupId)
   if (error) throw error
   return (data ?? []).map((r) => {
-    const p = (r as { profiles?: { name?: string; job_role?: string | null } }).profiles
-    return { user_id: (r as { user_id: string }).user_id, name: p?.name ?? '?', job_role: p?.job_role ?? null }
+    const row = r as { user_id: string; role?: string; profiles?: { name?: string; job_role?: string | null } }
+    const p = row.profiles
+    return {
+      user_id: row.user_id,
+      name: p?.name ?? '?',
+      job_role: p?.job_role ?? null,
+      role: row.role ?? 'member',
+    }
   })
+}
+
+export async function setMemberRole(groupId: string, userId: string, role: string): Promise<void> {
+  const { error } = await supabase
+    .from('group_members')
+    .update({ role })
+    .eq('group_id', groupId)
+    .eq('user_id', userId)
+  if (error) throw error
 }
 
 export async function removeGroupMember(groupId: string, userId: string): Promise<void> {
