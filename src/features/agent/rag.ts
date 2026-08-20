@@ -1,4 +1,4 @@
-import { API_BASE } from '../../lib/api'
+import { apiFetch } from '../../lib/api'
 
 async function json<T>(res: Response): Promise<T> {
   const data = await res.json()
@@ -12,7 +12,7 @@ export async function askRag(
   question: string,
 ): Promise<{ answer: string; sources: string[] }> {
   return json(
-    await fetch(`${API_BASE}/api/rag/ask`, {
+    await apiFetch(`/api/rag/ask`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ groupId, question }),
@@ -22,7 +22,7 @@ export async function askRag(
 
 export async function reindexRag(groupId: string): Promise<{ docs: number; chunks: number }> {
   return json(
-    await fetch(`${API_BASE}/api/rag/reindex?group=${encodeURIComponent(groupId)}`, {
+    await apiFetch(`/api/rag/reindex?group=${encodeURIComponent(groupId)}`, {
       method: 'POST',
     }),
   )

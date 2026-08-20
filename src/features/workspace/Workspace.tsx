@@ -3,7 +3,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 import { RoomView } from '../meeting/RoomView'
 import { Prejoin } from '../meeting/Prejoin'
-import { API_BASE } from '../../lib/api'
+import { apiFetch } from '../../lib/api'
 import {
   listGroups,
   createGroup,
@@ -258,8 +258,8 @@ export function Workspace({
   // Join instantly: ensure membership, mint a token, open the prejoin preview.
   const joinNow = async (team: Team) => {
     await ensureTeamMembership(team.id, profile.id)
-    const res = await fetch(
-      `${API_BASE}/api/token?room=${encodeURIComponent('team:' + team.id)}` +
+    const res = await apiFetch(
+      `/api/token?room=${encodeURIComponent('team:' + team.id)}` +
         `&identity=${encodeURIComponent(profile.id)}&name=${encodeURIComponent(profile.name)}`,
     )
     const data = await res.json()

@@ -15,7 +15,7 @@ import { RoomEvent, Track, type RemoteAudioTrack, type LocalVideoTrack } from 'l
 import { BackgroundBlur } from '@livekit/track-processors'
 import { Captions } from './Captions'
 import { WaitingRoom } from './WaitingRoom'
-import { API_BASE } from '../../lib/api'
+import { apiFetch } from '../../lib/api'
 import { useT } from '../../lib/i18n'
 import { SettingsSheet } from './SettingsSheet'
 import { ChatFeed } from './ChatPanel'
@@ -54,7 +54,7 @@ function ParticipantsSheet({
   const participants = useParticipants()
   const hostAction = (action: 'mute' | 'remove', identity: string) => {
     if (!room) return
-    fetch(`${API_BASE}/api/room/${action}`, {
+    apiFetch(`/api/room/${action}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ room, identity }),
@@ -532,8 +532,8 @@ export function RoomView({
     }
     try {
       const room = `team:${teamId}:${suffix}`
-      const res = await fetch(
-        `${API_BASE}/api/token?room=${encodeURIComponent(room)}` +
+      const res = await apiFetch(
+        `/api/token?room=${encodeURIComponent(room)}` +
           `&identity=${encodeURIComponent(userId)}&name=${encodeURIComponent(name)}`,
       )
       const data = await res.json()

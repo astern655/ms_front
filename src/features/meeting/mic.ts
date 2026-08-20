@@ -1,6 +1,6 @@
 import type { Room } from 'livekit-client'
 import { encodeCaption, type TranscriptEntry } from './caption'
-import { API_BASE } from '../../lib/api'
+import { apiFetch } from '../../lib/api'
 
 // Records the local mic in fixed chunks, sends each to /api/stt, then broadcasts
 // the resulting caption to the room and reports it locally via onEntry.
@@ -26,8 +26,8 @@ export function startMic(
 
   const send = async (blob: Blob) => {
     try {
-      const res = await fetch(
-        `${API_BASE}/api/stt?sourceLang=${opts.sourceLang}&targetLangs=${opts.targetLangs.join(',')}`,
+      const res = await apiFetch(
+        `/api/stt?sourceLang=${opts.sourceLang}&targetLangs=${opts.targetLangs.join(',')}`,
         { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob },
       )
       if (!res.ok) return
