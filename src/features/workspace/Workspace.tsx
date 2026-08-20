@@ -252,7 +252,10 @@ export function Workspace({
   if (!activeGroup) {
     return (
       <div className="ws-empty">
-        <h1 className="brand">Borderless</h1>
+        <div className="brand-lockup">
+          <img className="brand-logo" src="/weavia-logo.png" alt="WEAVIA" />
+          <h1 className="brand">WEAVIA</h1>
+        </div>
         <p className="subtitle">첫 그룹을 만들거나 초대 코드로 참가하세요</p>
         <div className="ws-empty-actions">
           <input

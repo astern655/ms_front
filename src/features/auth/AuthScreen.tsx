@@ -56,8 +56,9 @@ export function AuthScreen() {
   return (
     <div className="join-wrap">
       <div className="glass join-card">
-        <div>
-          <h1 className="brand">Borderless</h1>
+        <div className="brand-lockup">
+          <img className="brand-logo" src="/weavia-logo.png" alt="WEAVIA" />
+          <h1 className="brand">WEAVIA</h1>
           <p className="subtitle">경계 없는 협업 공간</p>
         </div>
 

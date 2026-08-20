@@ -1,8 +1,9 @@
 :root {
   --text: #f5f5f7;
   --text-2: rgba(235, 235, 245, 0.6);
-  --accent: #7c5cff;
-  --accent-rgb: 124, 92, 255;
+  --accent: #1786c8;
+  --accent-rgb: 23, 134, 200;
+  --accent-2: #5bc6f0; /* lighter accent for text/icons on dark surfaces */
   --danger: #ff453a;
   --glass: rgba(255, 255, 255, 0.1);
   --glass-strong: rgba(255, 255, 255, 0.16);
@@ -29,7 +30,7 @@ body,
 body {
   margin: 0;
   background:
-    radial-gradient(1200px 800px at 18% -12%, rgba(88, 86, 214, 0.38), transparent 60%),
+    radial-gradient(1200px 800px at 18% -12%, rgba(30, 95, 150, 0.38), transparent 60%),
     radial-gradient(1000px 700px at 105% 15%, rgba(var(--accent-rgb), 0.28), transparent 55%),
     linear-gradient(160deg, #0d0d12, #0b0b0f 62%);
   background-attachment: fixed;
@@ -70,6 +71,17 @@ body {
   font-size: 34px;
   font-weight: 700;
   letter-spacing: -0.02em;
+}
+.brand-lockup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.brand-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 18px rgba(var(--accent-rgb), 0.4));
 }
 
 .subtitle {
@@ -1331,7 +1343,7 @@ option {
 }
 
 .group-btn.add {
-  color: var(--accent);
+  color: var(--accent-2);
   font-size: 22px;
 }
 
@@ -1443,7 +1455,7 @@ option {
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(var(--accent-rgb), 0.2);
-  color: var(--accent);
+  color: var(--accent-2);
   flex: 0 0 auto;
 }
 .role-chip.admin {
@@ -1716,7 +1728,7 @@ option {
   border-radius: 23px;
   border: 1px dashed rgba(255, 255, 255, 0.25);
   background: rgba(255, 255, 255, 0.06);
-  color: var(--accent);
+  color: var(--accent-2);
   font-size: 22px;
   font-weight: 700;
   cursor: pointer;
@@ -1989,7 +2001,7 @@ option {
 .sched-when {
   font-size: 13px;
   font-weight: 700;
-  color: var(--accent);
+  color: var(--accent-2);
   flex: 0 0 auto;
   min-width: 116px;
 }
@@ -2055,7 +2067,7 @@ option {
 }
 .channel-row.muted .channel-mute {
   opacity: 1;
-  color: var(--accent);
+  color: var(--accent-2);
 }
 .channel-row.muted .channel-name {
   color: var(--text-2);
@@ -2414,7 +2426,7 @@ option {
 
 .rc-foot {
   font-size: 13px;
-  color: var(--accent);
+  color: var(--accent-2);
   font-weight: 600;
 }
 
@@ -2975,7 +2987,7 @@ option {
 }
 
 .caption b {
-  color: var(--accent);
+  color: var(--accent-2);
   font-weight: 700;
   margin-right: 8px;
 }
