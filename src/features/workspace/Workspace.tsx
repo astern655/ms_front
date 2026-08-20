@@ -12,6 +12,8 @@ import {
   ensureTeamMembership,
   joinGroupByCode,
   getGroupMembers,
+  isTeamMember,
+  requestToJoin,
   type Group,
   type Team,
   type Member,
@@ -65,6 +67,7 @@ export function Workspace({
     audio: boolean
   } | null>(null)
   const [pending, setPending] = useState<{ team: Team; token: string } | null>(null)
+  const [waiting, setWaiting] = useState<{ team: Team; requestId: string } | null>(null)
   const [channelTeam, setChannelTeam] = useState<Team | null>(null)
   const [dmPeer, setDmPeer] = useState<Member | null>(null)
   const [members, setMembers] = useState<Member[]>([])
@@ -250,22 +253,60 @@ export function Workspace({
     }
   }
 
+  // Join instantly: ensure membership, mint a token, open the prejoin preview.
+  const joinNow = async (team: Team) => {
+    await ensureTeamMembership(team.id, profile.id)
+    const res = await fetch(
+      `${API_BASE}/api/token?room=${encodeURIComponent('team:' + team.id)}` +
+        `&identity=${encodeURIComponent(profile.id)}&name=${encodeURIComponent(profile.name)}`,
+    )
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error ?? 'token error')
+    setPending({ team, token: data.token })
+  }
+
   const enterTeam = async (team: Team) => {
     setError('')
     try {
-      await ensureTeamMembership(team.id, profile.id)
-      const res = await fetch(
-        `${API_BASE}/api/token?room=${encodeURIComponent('team:' + team.id)}` +
-          `&identity=${encodeURIComponent(profile.id)}&name=${encodeURIComponent(profile.name)}`,
-      )
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'token error')
-      // Show the prejoin (device preview) before actually joining.
-      setPending({ team, token: data.token })
+      // Waiting room: if auto-approve is off and I'm not yet in the team, ask the host.
+      const member = await isTeamMember(team.id, profile.id)
+      if (team.auto_approve || member) {
+        await joinNow(team)
+      } else {
+        const req = await requestToJoin(team, profile.id, profile.name)
+        setWaiting({ team, requestId: req.id })
+      }
     } catch (e) {
       setError((e as Error).message)
     }
   }
+
+  // While waiting, watch my request; proceed on approval, surface a denial.
+  useEffect(() => {
+    if (!waiting) return
+    const ch = supabase
+      .channel(`req:${waiting.requestId}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'meeting_requests', filter: `id=eq.${waiting.requestId}` },
+        (p) => {
+          const status = (p.new as { status: string }).status
+          if (status === 'approved') {
+            const team = waiting.team
+            setWaiting(null)
+            joinNow(team).catch((e) => setError((e as Error).message))
+          } else if (status === 'denied') {
+            setWaiting(null)
+            setError('회의 입장이 거절되었어요.')
+          }
+        },
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(ch)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [waiting])
 
   // No group yet → simple onboarding to create/join.
   if (!activeGroup) {
@@ -484,6 +525,7 @@ export function Workspace({
             userId={profile.id}
             lang={profile.language}
             groupId={active.team.group_id}
+            teamId={active.team.id}
             startVideo={active.video}
             startAudioOn={active.audio}
             onLeave={() => setActive(null)}
@@ -605,6 +647,19 @@ export function Workspace({
       )}
       {profileOpen && (
         <ProfileEdit profile={profile} onClose={() => setProfileOpen(false)} onSaved={onProfileChange} />
+      )}
+
+      {waiting && (
+        <div className="modal-backdrop">
+          <div className="glass modal wait-modal" role="dialog" aria-label="입장 승인 대기">
+            <div className="wait-spinner" />
+            <h2># {waiting.team.name} 입장 대기 중</h2>
+            <p className="subtitle">호스트가 승인하면 자동으로 입장해요.</p>
+            <button className="btn-mini ghost" onClick={() => setWaiting(null)}>
+              취소
+            </button>
+          </div>
+        </div>
       )}
 
       <ChatBot groupId={activeGroup.id} />

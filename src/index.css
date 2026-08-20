@@ -2077,6 +2077,59 @@ option {
   padding: 8px 10px;
   font-size: 13px;
 }
+.wait-modal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 32px 28px;
+  max-width: 360px;
+}
+.wait-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: var(--accent);
+  animation: wait-spin 0.9s linear infinite;
+}
+@keyframes wait-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.waitroom {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  width: min(420px, 92%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+}
+.waitroom-head {
+  font-size: 13px;
+  font-weight: 700;
+}
+.waitroom-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.waitroom-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .dm-item {
   gap: 9px;
 }

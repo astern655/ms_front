@@ -14,6 +14,7 @@ import {
 import { RoomEvent, Track, type RemoteAudioTrack, type LocalVideoTrack } from 'livekit-client'
 import { BackgroundBlur } from '@livekit/track-processors'
 import { Captions } from './Captions'
+import { WaitingRoom } from './WaitingRoom'
 import { SettingsSheet } from './SettingsSheet'
 import { ChatFeed } from './ChatPanel'
 import { DocsView } from '../docs/DocsView'
@@ -153,12 +154,14 @@ function RoomInner({
   userId,
   lang,
   groupId,
+  teamId,
   startAudioOn,
 }: {
   name: string
   userId?: string
   lang: string
   groupId: string
+  teamId?: string
   startAudioOn: boolean
 }) {
   const room = useRoomContext()
@@ -228,6 +231,7 @@ function RoomInner({
     <>
       <div className="stage-area">
         <Stage />
+        {teamId && <WaitingRoom teamId={teamId} />}
         <Captions entries={captions} displayLang={lang} />
 
         <div className="glass controlbar">
@@ -372,6 +376,7 @@ export function RoomView({
   userId,
   lang,
   groupId,
+  teamId,
   startVideo = true,
   startAudioOn = true,
   onLeave,
@@ -382,6 +387,7 @@ export function RoomView({
   userId?: string
   lang: string
   groupId: string
+  teamId?: string
   startVideo?: boolean
   startAudioOn?: boolean
   onLeave: () => void
@@ -397,7 +403,7 @@ export function RoomView({
       onDisconnected={onLeave}
     >
       <RoomAudioRenderer />
-      <RoomInner name={name} userId={userId} lang={lang} groupId={groupId} startAudioOn={startAudioOn} />
+      <RoomInner name={name} userId={userId} lang={lang} groupId={groupId} teamId={teamId} startAudioOn={startAudioOn} />
     </LiveKitRoom>
   )
 }

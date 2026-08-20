@@ -3,6 +3,7 @@ import {
   getGroupMembers,
   removeGroupMember,
   setMemberRole,
+  setAutoApprove,
   renameGroup,
   deleteTeam,
   type Group,
@@ -155,9 +156,25 @@ export function GroupSettings({
                 <span className="hash">#</span>
                 <span className="name">{t.name}</span>
               </span>
-              <button className="danger-btn" onClick={() => removeTeam(t.id)}>
-                삭제
-              </button>
+              <span className="row-actions">
+                <button
+                  className={`btn-mini ghost ${!t.auto_approve ? 'on' : ''}`}
+                  onClick={async () => {
+                    try {
+                      await setAutoApprove(t.id, !t.auto_approve)
+                      onChanged()
+                    } catch (e) {
+                      setError((e as Error).message)
+                    }
+                  }}
+                  title="켜면 비팀원 입장 시 호스트 승인을 받습니다"
+                >
+                  {t.auto_approve ? '대기실 꺼짐' : '대기실 켜짐'}
+                </button>
+                <button className="danger-btn" onClick={() => removeTeam(t.id)}>
+                  삭제
+                </button>
+              </span>
             </div>
           ))}
           {teams.length === 0 && <p className="ws-hint" style={{ padding: 0 }}>팀이 없습니다.</p>}
