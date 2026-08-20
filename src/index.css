@@ -2077,6 +2077,25 @@ option {
   padding: 8px 10px;
   font-size: 13px;
 }
+.dm-item {
+  gap: 9px;
+}
+.dm-item .avatar.sm {
+  width: 22px;
+  height: 22px;
+  font-size: 10px;
+  flex: 0 0 auto;
+}
+.dm-badge {
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(var(--accent-rgb), 0.16);
+  color: var(--accent-2);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 .user-card {
   position: relative;
   display: flex;

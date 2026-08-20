@@ -58,6 +58,39 @@ export async function sendMessage(m: {
   if (error) throw error
 }
 
+// Stable DM channel key for a pair of users (order-independent).
+export function dmKeyFor(a: string, b: string): string {
+  return [a, b].sort().join(':')
+}
+
+export async function listDM(dmKey: string): Promise<Message[]> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('*')
+    .eq('dm_key', dmKey)
+    .order('created_at', { ascending: true })
+    .limit(200)
+  if (error) throw error
+  return data as Message[]
+}
+
+export async function sendDM(m: {
+  groupId: string
+  dmKey: string
+  userId: string
+  name: string
+  content: string
+}): Promise<void> {
+  const { error } = await supabase.from('messages').insert({
+    group_id: m.groupId,
+    dm_key: m.dmKey,
+    user_id: m.userId,
+    author_name: m.name,
+    content: m.content,
+  })
+  if (error) throw error
+}
+
 export async function deleteMessage(id: string): Promise<void> {
   const { error } = await supabase.from('messages').delete().eq('id', id)
   if (error) throw error

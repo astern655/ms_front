@@ -11,8 +11,10 @@ import {
   createTeam,
   ensureTeamMembership,
   joinGroupByCode,
+  getGroupMembers,
   type Group,
   type Team,
+  type Member,
 } from '../groups/teams'
 import { GroupSettings } from '../groups/GroupSettings'
 import { ProfileEdit } from '../groups/ProfileEdit'
@@ -22,6 +24,7 @@ import { ChatBot } from '../agent/ChatBot'
 import { NotificationsBell } from '../notifications/NotificationsBell'
 import { listMutedTeams, setMuted } from '../chat/mutes'
 import { MeetingSchedule } from '../meeting/MeetingSchedule'
+import { DMView } from '../chat/DMView'
 import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon, BellOffIcon } from '../../components/ui/icons'
 
 const serverUrl =
@@ -63,6 +66,8 @@ export function Workspace({
   } | null>(null)
   const [pending, setPending] = useState<{ team: Team; token: string } | null>(null)
   const [channelTeam, setChannelTeam] = useState<Team | null>(null)
+  const [dmPeer, setDmPeer] = useState<Member | null>(null)
+  const [members, setMembers] = useState<Member[]>([])
   const [presence, setPresence] = useState<Record<string, string[]>>({})
   const [mutedTeams, setMutedTeams] = useState<Set<string>>(new Set())
   const [error, setError] = useState('')
@@ -147,18 +152,27 @@ export function Workspace({
     setActiveGroupId(id)
     setActive(null)
     setChannelTeam(null)
+    setDmPeer(null)
     setView('board')
   }
 
   const goView = (v: View) => {
     setActive(null)
     setChannelTeam(null)
+    setDmPeer(null)
     setView(v)
   }
 
   const openChannel = (t: Team) => {
     setActive(null)
+    setDmPeer(null)
     setChannelTeam(t)
+  }
+
+  const openDM = (m: Member) => {
+    setActive(null)
+    setChannelTeam(null)
+    setDmPeer(m)
   }
 
   const toggleMute = async (teamId: string) => {
@@ -175,6 +189,11 @@ export function Workspace({
   useEffect(() => {
     listMutedTeams(profile.id).then(setMutedTeams).catch(() => {})
   }, [profile.id])
+
+  useEffect(() => {
+    if (!activeGroupId) return
+    getGroupMembers(activeGroupId).then(setMembers).catch(() => {})
+  }, [activeGroupId])
 
   const addGroup = async () => {
     const name = newGroup.trim()
@@ -394,6 +413,24 @@ export function Workspace({
             onChange={(e) => setNewTeam(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addTeam()}
           />
+
+          {members.filter((m) => m.user_id !== profile.id).length > 0 && (
+            <>
+              <span className="sidebar-label">다이렉트 메시지</span>
+              {members
+                .filter((m) => m.user_id !== profile.id)
+                .map((m) => (
+                  <button
+                    key={m.user_id}
+                    className={`nav-item dm-item ${dmPeer?.user_id === m.user_id ? 'on' : ''}`}
+                    onClick={() => openDM(m)}
+                  >
+                    <span className="avatar sm">{(m.name || '?').slice(0, 2)}</span>
+                    <span className="channel-name">{m.name}</span>
+                  </button>
+                ))}
+            </>
+          )}
         </div>
 
         <div className="user-card">
@@ -460,6 +497,15 @@ export function Workspace({
             userId={profile.id}
             userName={profile.name}
             onEnterMeeting={() => enterTeam(channelTeam)}
+          />
+        ) : dmPeer ? (
+          <DMView
+            key={dmPeer.user_id}
+            groupId={activeGroup.id}
+            meId={profile.id}
+            meName={profile.name}
+            peerId={dmPeer.user_id}
+            peerName={dmPeer.name}
           />
         ) : view === 'docs' ? (
           <DocsView
