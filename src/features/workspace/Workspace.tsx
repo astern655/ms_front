@@ -28,6 +28,7 @@ import { listMutedTeams, setMuted } from '../chat/mutes'
 import { MeetingSchedule } from '../meeting/MeetingSchedule'
 import { DMView } from '../chat/DMView'
 import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon, BellOffIcon, CloseIcon } from '../../components/ui/icons'
+import { useT } from '../../lib/i18n'
 
 const serverUrl =
   (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
@@ -36,16 +37,16 @@ const serverUrl =
 type Profile = { id: string; name: string; language: string; job_role?: string | null }
 type View = 'board' | 'docs'
 
-const NAV: { key: View; label: string; icon: () => ReactElement }[] = [
-  { key: 'board', label: '팀 보드', icon: BoardIcon },
-  { key: 'docs', label: '문서', icon: DocIcon },
+const NAV: { key: View; labelKo: string; labelEn: string; icon: () => ReactElement }[] = [
+  { key: 'board', labelKo: '팀 보드', labelEn: 'Team board', icon: BoardIcon },
+  { key: 'docs', labelKo: '문서', labelEn: 'Docs', icon: DocIcon },
 ]
 
 type Status = 'online' | 'away' | 'dnd'
-const STATUS: Record<Status, { label: string; color: string }> = {
-  online: { label: '온라인', color: '#30d158' },
-  away: { label: '자리 비움', color: '#ffcf3f' },
-  dnd: { label: '방해 금지', color: '#ff453a' },
+const STATUS: Record<Status, { labelKo: string; labelEn: string; color: string }> = {
+  online: { labelKo: '온라인', labelEn: 'Online', color: '#30d158' },
+  away: { labelKo: '자리 비움', labelEn: 'Away', color: '#ffcf3f' },
+  dnd: { labelKo: '방해 금지', labelEn: 'Do not disturb', color: '#ff453a' },
 }
 
 export function Workspace({
@@ -98,6 +99,7 @@ export function Workspace({
   activeTeamRef.current = activeTeamId
   const statusRef = useRef<Status>('online')
   statusRef.current = status
+  const t = useT()
 
   useEffect(() => {
     listGroups()
@@ -297,7 +299,7 @@ export function Workspace({
             joinNow(team).catch((e) => setError((e as Error).message))
           } else if (status === 'denied') {
             setWaiting(null)
-            setError('회의 입장이 거절되었어요.')
+            setError(t('회의 입장이 거절되었어요.', 'Meeting entry was declined.'))
           }
         },
       )
@@ -316,18 +318,18 @@ export function Workspace({
           <img className="brand-logo" src="/weavia-logo.png" alt="WEAVIA" />
           <h1 className="brand">WEAVIA</h1>
         </div>
-        <p className="subtitle">첫 그룹을 만들거나 초대 코드로 참가하세요</p>
+        <p className="subtitle">{t('첫 그룹을 만들거나 초대 코드로 참가하세요', 'Create your first group or join with an invite code')}</p>
         <div className="ws-empty-actions">
           <input
             className="field"
-            placeholder="새 그룹 이름 + Enter"
+            placeholder={t('새 그룹 이름 + Enter', 'New group name + Enter')}
             value={newGroup}
             onChange={(e) => setNewGroup(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addGroup()}
           />
           <input
             className="field"
-            placeholder="초대 링크 또는 코드 + Enter"
+            placeholder={t('초대 링크 또는 코드 + Enter', 'Invite link or code + Enter')}
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
@@ -335,7 +337,7 @@ export function Workspace({
         </div>
         {error && <p className="error">{error}</p>}
         <button className="btn-ghost ws-empty-logout" onClick={onSignOut}>
-          로그아웃
+          {t('로그아웃', 'Log out')}
         </button>
       </div>
     )
@@ -356,12 +358,12 @@ export function Workspace({
           </button>
         ))}
         <div className="rail-add-wrap">
-          <button className="rail-add" onClick={() => setRailMenu(true)} title="그룹 추가/참가">
+          <button className="rail-add" onClick={() => setRailMenu(true)} title={t('그룹 추가/참가', 'Add/join group')}>
             +
           </button>
         </div>
         <span className="rail-spacer" />
-        <button className="rail-icon" onClick={onSignOut} title="로그아웃">
+        <button className="rail-icon" onClick={onSignOut} title={t('로그아웃', 'Log out')}>
           <LogoutIcon />
         </button>
       </aside>
@@ -372,13 +374,13 @@ export function Workspace({
           <span className="sidebar-group">{activeGroup.name}</span>
           <NotificationsBell userId={profile.id} />
           {isOwner && (
-            <button className="icon-btn small" onClick={() => setSettingsOpen(true)} title="그룹 설정">
+            <button className="icon-btn small" onClick={() => setSettingsOpen(true)} title={t('그룹 설정', 'Group settings')}>
               <SettingsIcon />
             </button>
           )}
         </div>
         <div className="sidebar-nav">
-          <span className="sidebar-label">보기</span>
+          <span className="sidebar-label">{t('보기', 'View')}</span>
           {NAV.map((n) => {
             const Icon = n.icon
             return (
@@ -388,23 +390,23 @@ export function Workspace({
                 onClick={() => goView(n.key)}
               >
                 <Icon />
-                {n.label}
+                {t(n.labelKo, n.labelEn)}
               </button>
             )
           })}
 
-          <span className="sidebar-label">팀 채널</span>
-          {teams.map((t) => {
-            const n = (presence[t.id] ?? []).length
-            const muted = mutedTeams.has(t.id)
+          <span className="sidebar-label">{t('팀 채널', 'Team channels')}</span>
+          {teams.map((team) => {
+            const n = (presence[team.id] ?? []).length
+            const muted = mutedTeams.has(team.id)
             return (
-              <div key={t.id} className={`channel-row ${muted ? 'muted' : ''}`}>
+              <div key={team.id} className={`channel-row ${muted ? 'muted' : ''}`}>
                 <button
-                  className={`nav-item channel ${t.id === activeTeamId || (!active && channelTeam?.id === t.id) ? 'on' : ''}`}
-                  onClick={() => openChannel(t)}
+                  className={`nav-item channel ${team.id === activeTeamId || (!active && channelTeam?.id === team.id) ? 'on' : ''}`}
+                  onClick={() => openChannel(team)}
                 >
                   <span className="hash">#</span>
-                  <span className="channel-name">{t.name}</span>
+                  <span className="channel-name">{team.name}</span>
                   {n > 0 && !muted && (
                     <span className="channel-live">
                       <span className="live-dot" />
@@ -414,9 +416,9 @@ export function Workspace({
                 </button>
                 <button
                   className="channel-mute"
-                  onClick={() => toggleMute(t.id)}
-                  title={muted ? '알림 켜기' : '알림 음소거'}
-                  aria-label={muted ? '알림 켜기' : '알림 음소거'}
+                  onClick={() => toggleMute(team.id)}
+                  title={muted ? t('알림 켜기', 'Turn on notifications') : t('알림 음소거', 'Mute notifications')}
+                  aria-label={muted ? t('알림 켜기', 'Turn on notifications') : t('알림 음소거', 'Mute notifications')}
                 >
                   <BellOffIcon />
                 </button>
@@ -425,7 +427,7 @@ export function Workspace({
           })}
           <input
             className="field channel-new"
-            placeholder="+ 팀 만들기"
+            placeholder={t('+ 팀 만들기', '+ New team')}
             value={newTeam}
             onChange={(e) => setNewTeam(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addTeam()}
@@ -433,7 +435,7 @@ export function Workspace({
 
           {members.filter((m) => m.user_id !== profile.id).length > 0 && (
             <>
-              <span className="sidebar-label">다이렉트 메시지</span>
+              <span className="sidebar-label">{t('다이렉트 메시지', 'Direct messages')}</span>
               {members
                 .filter((m) => m.user_id !== profile.id)
                 .map((m) => (
@@ -451,7 +453,7 @@ export function Workspace({
         </div>
 
         <div className="user-card">
-          <button className="user-avatar-btn" onClick={() => setStatusMenu((v) => !v)} title="상태 변경">
+          <button className="user-avatar-btn" onClick={() => setStatusMenu((v) => !v)} title={t('상태 변경', 'Change status')}>
             <span className="avatar sm">{profile.name.slice(0, 2)}</span>
             <span className="status-dot" style={{ background: STATUS[status].color }} />
           </button>
@@ -462,19 +464,19 @@ export function Workspace({
                 {(Object.keys(STATUS) as Status[]).map((s) => (
                   <button key={s} className={status === s ? 'on' : ''} onClick={() => changeStatus(s)}>
                     <span className="status-dot" style={{ background: STATUS[s].color }} />
-                    {STATUS[s].label}
+                    {t(STATUS[s].labelKo, STATUS[s].labelEn)}
                   </button>
                 ))}
               </div>
             </>
           )}
-          <button className="user-meta" onClick={() => setProfileOpen(true)} title="프로필 수정">
+          <button className="user-meta" onClick={() => setProfileOpen(true)} title={t('프로필 수정', 'Edit profile')}>
             <span className="user-name">{profile.name}</span>
             <span className="user-role">
-              {STATUS[status].label} · {profile.language === 'en' ? 'English' : '한국어'}
+              {t(STATUS[status].labelKo, STATUS[status].labelEn)} · {profile.language === 'en' ? 'English' : '한국어'}
             </span>
           </button>
-          <button className="icon-btn small" onClick={() => setProfileOpen(true)} title="프로필 수정">
+          <button className="icon-btn small" onClick={() => setProfileOpen(true)} title={t('프로필 수정', 'Edit profile')}>
             <SettingsIcon />
           </button>
         </div>
@@ -537,8 +539,8 @@ export function Workspace({
           <div className="board-wrap">
             <div className="board-head">
               <div>
-                <h1 className="board-title">팀 보드</h1>
-                <p className="board-sub">누가 어느 팀에 있는지 확인하고 바로 입장하세요.</p>
+                <h1 className="board-title">{t('팀 보드', 'Team board')}</h1>
+                <p className="board-sub">{t('누가 어느 팀에 있는지 확인하고 바로 입장하세요.', 'See who is in which team and jump right in.')}</p>
               </div>
             </div>
             {teams.length > 0 && (
@@ -550,17 +552,17 @@ export function Workspace({
               />
             )}
             <div className="board">
-              {teams.map((t) => {
-                const here = presence[t.id] ?? []
+              {teams.map((team) => {
+                const here = presence[team.id] ?? []
                 return (
-                  <button key={t.id} className="room-card" onClick={() => enterTeam(t)}>
+                  <button key={team.id} className="room-card" onClick={() => enterTeam(team)}>
                     <div className="rc-name">
                       <span className="hash">#</span>
-                      {t.name}
+                      {team.name}
                       {here.length > 0 ? (
-                        <span className="rc-live">{here.length}명 참여 중</span>
+                        <span className="rc-live">{t(`${here.length}명 참여 중`, `${here.length} here`)}</span>
                       ) : (
-                        <span className="rc-idle">비어 있음</span>
+                        <span className="rc-idle">{t('비어 있음', 'Empty')}</span>
                       )}
                     </div>
                     <div className="rc-avatars">
@@ -570,17 +572,17 @@ export function Workspace({
                         </span>
                       ))}
                       {here.length > 5 && <span className="rc-more">+{here.length - 5}</span>}
-                      {here.length === 0 && <span className="rc-empty">아직 아무도 없어요</span>}
+                      {here.length === 0 && <span className="rc-empty">{t('아직 아무도 없어요', 'No one here yet')}</span>}
                     </div>
-                    <div className="rc-foot">입장하기</div>
+                    <div className="rc-foot">{t('입장하기', 'Join')}</div>
                   </button>
                 )
               })}
               <div className="room-card new">
-                <div className="rc-name">새 팀</div>
+                <div className="rc-name">{t('새 팀', 'New team')}</div>
                 <input
                   className="field create-input"
-                  placeholder="팀 이름 + Enter"
+                  placeholder={t('팀 이름 + Enter', 'Team name + Enter')}
                   value={newTeam}
                   onChange={(e) => setNewTeam(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addTeam()}
@@ -603,13 +605,13 @@ export function Workspace({
               onClick={() => goView(n.key)}
             >
               <Icon />
-              {n.key === 'board' ? '보드' : n.label}
+              {n.key === 'board' ? t('보드', 'Board') : t(n.labelKo, n.labelEn)}
             </button>
           )
         })}
         <button onClick={() => setProfileOpen(true)}>
           <PeopleIcon />
-          프로필
+          {t('프로필', 'Profile')}
         </button>
       </nav>
 
@@ -632,19 +634,19 @@ export function Workspace({
             className="glass modal group-modal"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
-            aria-label="그룹 추가·참가"
+            aria-label={t('그룹 추가·참가', 'Add/join group')}
           >
             <div className="modal-head">
-              <h2>그룹 추가 · 참가</h2>
-              <button className="icon-btn small" onClick={() => setRailMenu(false)} aria-label="닫기">
+              <h2>{t('그룹 추가 · 참가', 'Add or join group')}</h2>
+              <button className="icon-btn small" onClick={() => setRailMenu(false)} aria-label={t('닫기', 'Close')}>
                 <CloseIcon />
               </button>
             </div>
             <section className="setting-group">
-              <div className="section-title">새 그룹 만들기</div>
+              <div className="section-title">{t('새 그룹 만들기', 'Create new group')}</div>
               <input
                 className="field"
-                placeholder="그룹 이름 + Enter"
+                placeholder={t('그룹 이름 + Enter', 'Group name + Enter')}
                 value={newGroup}
                 autoFocus
                 onChange={(e) => setNewGroup(e.target.value)}
@@ -652,10 +654,10 @@ export function Workspace({
               />
             </section>
             <section className="setting-group">
-              <div className="section-title">초대로 참가</div>
+              <div className="section-title">{t('초대로 참가', 'Join with invite')}</div>
               <input
                 className="field"
-                placeholder="초대 링크 또는 코드 + Enter"
+                placeholder={t('초대 링크 또는 코드 + Enter', 'Invite link or code + Enter')}
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
@@ -668,12 +670,12 @@ export function Workspace({
 
       {waiting && (
         <div className="modal-backdrop">
-          <div className="glass modal wait-modal" role="dialog" aria-label="입장 승인 대기">
+          <div className="glass modal wait-modal" role="dialog" aria-label={t('입장 승인 대기', 'Waiting for approval')}>
             <div className="wait-spinner" />
-            <h2># {waiting.team.name} 입장 대기 중</h2>
-            <p className="subtitle">호스트가 승인하면 자동으로 입장해요.</p>
+            <h2>{t(`# ${waiting.team.name} 입장 대기 중`, `# Waiting to join ${waiting.team.name}`)}</h2>
+            <p className="subtitle">{t('호스트가 승인하면 자동으로 입장해요.', 'You will join automatically once the host approves.')}</p>
             <button className="btn-mini ghost" onClick={() => setWaiting(null)}>
-              취소
+              {t('취소', 'Cancel')}
             </button>
           </div>
         </div>

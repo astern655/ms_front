@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useT } from '../../lib/i18n'
 import { dmKeyFor, listDM, sendDM, deleteMessage, type Message } from './messages'
 
 export function DMView({
@@ -20,6 +21,7 @@ export function DMView({
   const [error, setError] = useState('')
   const listRef = useRef<HTMLDivElement>(null)
   const dmKey = dmKeyFor(meId, peerId)
+  const t = useT()
 
   const scroll = () =>
     requestAnimationFrame(() => listRef.current?.scrollTo({ top: 1e9, behavior: 'smooth' }))
@@ -77,12 +79,12 @@ export function DMView({
           <span className="avatar sm">{(peerName || '?').slice(0, 2)}</span>
           {peerName}
         </span>
-        <span className="dm-badge">다이렉트 메시지</span>
+        <span className="dm-badge">{t('다이렉트 메시지', 'Direct message')}</span>
       </div>
 
       <div className="chat-msgs" ref={listRef}>
         {messages.length === 0 && (
-          <p className="ai-empty">{peerName}님과의 대화를 시작하세요.</p>
+          <p className="ai-empty">{t(`${peerName}님과의 대화를 시작하세요.`, `Start a conversation with ${peerName}.`)}</p>
         )}
         {messages.map((m) => {
           const mine = m.user_id === meId
@@ -95,7 +97,7 @@ export function DMView({
                 </span>
                 {mine && (
                   <div className="chat-msg-actions">
-                    <button onClick={() => deleteMessage(m.id).catch(() => {})} title="삭제">
+                    <button onClick={() => deleteMessage(m.id).catch(() => {})} title={t('삭제', 'Delete')}>
                       ✕
                     </button>
                   </div>
@@ -110,13 +112,13 @@ export function DMView({
       <div className="chat-input chat-compose">
         <input
           className="field"
-          placeholder={`${peerName}님에게 메시지`}
+          placeholder={t(`${peerName}님에게 메시지`, `Message ${peerName}`)}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && send()}
         />
         <button className="ai-send" onClick={send}>
-          보내기
+          {t('보내기', 'Send')}
         </button>
       </div>
       {error && <p className="error">{error}</p>}

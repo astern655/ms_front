@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Team } from '../groups/teams'
 import { listUpcoming, addMeeting, deleteMeeting, type ScheduledMeeting } from './schedule'
+import { useT } from '../../lib/i18n'
 
 export function MeetingSchedule({
   groupId,
@@ -13,6 +14,7 @@ export function MeetingSchedule({
   userId: string
   onEnter: (team: Team) => void
 }) {
+  const t = useT()
   const [items, setItems] = useState<ScheduledMeeting[]>([])
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -47,14 +49,14 @@ export function MeetingSchedule({
     load()
   }
 
-  const teamName = (id: string) => teams.find((t) => t.id === id)?.name ?? '팀'
+  const teamName = (id: string) => teams.find((tm) => tm.id === id)?.name ?? t('팀', 'Team')
 
   return (
     <section className="sched">
       <div className="sched-head">
-        <span className="sched-title">예정된 회의</span>
+        <span className="sched-title">{t('예정된 회의', 'Upcoming meetings')}</span>
         <button className="btn-mini" onClick={() => setOpen((v) => !v)}>
-          {open ? '취소' : '+ 회의 예약'}
+          {open ? t('취소', 'Cancel') : t('+ 회의 예약', '+ Schedule meeting')}
         </button>
       </div>
 
@@ -62,15 +64,15 @@ export function MeetingSchedule({
         <div className="sched-form glass">
           <input
             className="field"
-            placeholder="회의 제목"
+            placeholder={t('회의 제목', 'Meeting title')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
           <div className="sched-form-row">
             <select className="field" value={teamId || teams[0]?.id || ''} onChange={(e) => setTeamId(e.target.value)}>
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>
-                  # {t.name}
+              {teams.map((tm) => (
+                <option key={tm.id} value={tm.id}>
+                  # {tm.name}
                 </option>
               ))}
             </select>
@@ -81,14 +83,14 @@ export function MeetingSchedule({
               onChange={(e) => setStartAt(e.target.value)}
             />
             <button className="btn-mini" onClick={submit} disabled={!title.trim() || !startAt}>
-              예약
+              {t('예약', 'Schedule')}
             </button>
           </div>
         </div>
       )}
 
       {items.length === 0 ? (
-        <p className="sched-empty">예정된 회의가 없어요.</p>
+        <p className="sched-empty">{t('예정된 회의가 없어요.', 'No upcoming meetings.')}</p>
       ) : (
         <div className="sched-list">
           {items.map((m) => {
@@ -111,10 +113,10 @@ export function MeetingSchedule({
                 <div className="sched-actions">
                   {team && (
                     <button className="btn-mini" onClick={() => onEnter(team)}>
-                      입장
+                      {t('입장', 'Join')}
                     </button>
                   )}
-                  <button className="icon-btn small" onClick={() => remove(m.id)} aria-label="삭제" title="삭제">
+                  <button className="icon-btn small" onClick={() => remove(m.id)} aria-label={t('삭제', 'Delete')} title={t('삭제', 'Delete')}>
                     ✕
                   </button>
                 </div>

@@ -33,18 +33,28 @@ function classify(lm: NormalizedLandmark[]): Gesture | null {
   return GESTURES.find((g) => g.pattern.every((v, i) => v === p[i])) ?? null
 }
 
+export type SignStatus = { ready: boolean; hand: boolean; label: string | null }
+
 export function startSign(
   room: Room,
-  opts: { speaker: string; sourceLang: string; onEntry: (e: TranscriptEntry) => void },
+  opts: {
+    speaker: string
+    sourceLang: string
+    onEntry: (e: TranscriptEntry) => void
+    onStatus?: (s: SignStatus) => void
+    videoEl?: HTMLVideoElement | null
+  },
 ): () => void {
   let stopped = false
   let raf = 0
   let stream: MediaStream | undefined
   let landmarker: HandLandmarker | undefined
-  const video = document.createElement('video')
+  // Use the caller-provided <video> (shown as a preview) when available, else a detached one.
+  const video = opts.videoEl ?? document.createElement('video')
   video.autoplay = true
   video.muted = true
   video.playsInline = true
+  const status = (s: SignStatus) => opts.onStatus?.(s)
 
   // Debounce: require a gesture to hold, and don't repeat too fast.
   let candidate: string | null = null
@@ -87,6 +97,7 @@ export function startSign(
       }
       video.srcObject = stream
       await video.play().catch(() => {})
+      status({ ready: true, hand: false, label: null })
 
       const loop = () => {
         if (stopped || !landmarker) return
@@ -94,6 +105,12 @@ export function startSign(
           const res = landmarker.detectForVideo(video, performance.now())
           const hand = res.landmarks?.[0]
           const g = hand ? classify(hand) : null
+          // Live feedback: is a hand seen, and which gesture is recognized right now.
+          status({
+            ready: true,
+            hand: !!hand,
+            label: g ? (opts.sourceLang === 'en' ? g.en : g.ko) : null,
+          })
           if (g) {
             if (g.id === candidate) holdFrames += 1
             else {
@@ -116,6 +133,7 @@ export function startSign(
       loop()
     } catch {
       /* MediaPipe/model/camera unavailable — sign mode simply stays idle */
+      status({ ready: false, hand: false, label: null })
     }
   })()
 

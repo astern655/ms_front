@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useT } from '../../lib/i18n'
 import { listDocs, createDoc, saveDoc, deleteDoc, type Doc, type DocScope } from './docs'
 import { DocEditor } from './DocEditor'
 import {
@@ -18,7 +19,12 @@ const SCOPES: { v: DocScope; l: string }[] = [
   { v: 'meeting', l: '회의' },
   { v: 'group', l: '그룹 전체' },
 ]
-const scopeLabel = (v: DocScope) => SCOPES.find((s) => s.v === v)?.l ?? v
+const SCOPE_EN: Record<DocScope, string> = {
+  personal: 'Personal',
+  team: 'Team',
+  meeting: 'Meeting',
+  group: 'All members',
+}
 
 // --- Templates (BlockNote block builders) ---
 type Block = { type: string; props?: Record<string, unknown>; content: unknown; children?: Block[] }
@@ -38,11 +44,12 @@ const C = (text: string): Block => ({
   content: [{ type: 'text', text, styles: {} }],
 })
 
-const TEMPLATES: { key: string; label: string; title: string; blocks: Block[] | null }[] = [
-  { key: 'blank', label: '빈 문서', title: '', blocks: null },
+const TEMPLATES: { key: string; label: string; labelEn: string; title: string; blocks: Block[] | null }[] = [
+  { key: 'blank', label: '빈 문서', labelEn: 'Blank document', title: '', blocks: null },
   {
     key: 'meeting',
     label: '회의록',
+    labelEn: 'Meeting notes',
     title: '회의록',
     blocks: [
       H(1, '회의록'),
@@ -61,12 +68,14 @@ const TEMPLATES: { key: string; label: string; title: string; blocks: Block[] | 
   {
     key: 'action',
     label: '액션 아이템',
+    labelEn: 'Action items',
     title: '액션 아이템',
     blocks: [H(1, '액션 아이템'), C('담당 · 할 일 · 기한'), C(''), C('')],
   },
   {
     key: 'prd',
     label: 'PRD',
+    labelEn: 'PRD',
     title: 'PRD',
     blocks: [
       H(1, 'PRD'),
@@ -146,6 +155,8 @@ export function DocsView({
   userId?: string
   userName?: string
 }) {
+  const t = useT()
+  const scopeLabel = (v: DocScope) => t(SCOPES.find((s) => s.v === v)?.l ?? v, SCOPE_EN[v] ?? v)
   const [docs, setDocs] = useState<Doc[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
@@ -237,15 +248,15 @@ export function DocsView({
     }
   }
 
-  const addTemplate = async (t: (typeof TEMPLATES)[number]) => {
+  const addTemplate = async (tpl: (typeof TEMPLATES)[number]) => {
     setNewMenu(false)
     try {
       const d = await createDoc(groupId, 'personal')
       let doc = d
-      if (t.blocks) {
-        const content = JSON.stringify(t.blocks)
-        await saveDoc(d.id, { title: t.title, content })
-        doc = { ...d, title: t.title, content }
+      if (tpl.blocks) {
+        const content = JSON.stringify(tpl.blocks)
+        await saveDoc(d.id, { title: tpl.title, content })
+        doc = { ...d, title: tpl.title, content }
       }
       setDocs((prev) => [doc, ...prev])
       open(doc)
@@ -279,7 +290,7 @@ export function DocsView({
     if (!content || !activeId || !userId) return
     setNewComment('')
     try {
-      await addComment({ docId: activeId, groupId, userId, name: userName ?? '나', content })
+      await addComment({ docId: activeId, groupId, userId, name: userName ?? t('나', 'Me'), content })
     } catch (e) {
       setError((e as Error).message)
     }
@@ -313,7 +324,7 @@ export function DocsView({
   }
 
   const exportMd = () => {
-    const md = `# ${title || '제목 없음'}\n\n${blocksToMarkdown(activeContent)}`
+    const md = `# ${title || t('제목 없음', 'Untitled')}\n\n${blocksToMarkdown(activeContent)}`
     const blob = new Blob([md], { type: 'text/markdown' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
@@ -358,16 +369,16 @@ export function DocsView({
             <span className="doc-caret spacer" />
           )}
           <button className="doc-title-btn" onClick={() => open(d)}>
-            {d.title || '제목 없음'}
+            {d.title || t('제목 없음', 'Untitled')}
           </button>
           <button
             className={`doc-star ${favs.has(d.id) ? 'on' : ''}`}
-            title="즐겨찾기"
+            title={t('즐겨찾기', 'Favorite')}
             onClick={() => toggleFav(d.id)}
           >
             {favs.has(d.id) ? '★' : '☆'}
           </button>
-          <button className="doc-add-child" title="하위 페이지 추가" onClick={() => addChild(d)}>
+          <button className="doc-add-child" title={t('하위 페이지 추가', 'Add sub-page')} onClick={() => addChild(d)}>
             +
           </button>
         </div>
@@ -394,18 +405,22 @@ export function DocsView({
       <aside className="docs-list glass">
         <div className="docs-new">
           <button className="btn-mini" onClick={() => add('personal')}>
-            + 새 문서
+            + {t('새 문서', 'New document')}
           </button>
-          <button className="btn-mini ghost docs-new-caret" onClick={() => setNewMenu((v) => !v)} title="템플릿">
+          <button
+            className="btn-mini ghost docs-new-caret"
+            onClick={() => setNewMenu((v) => !v)}
+            title={t('템플릿', 'Templates')}
+          >
             ▾
           </button>
           {newMenu && (
             <>
               <div className="menu-catch" onClick={() => setNewMenu(false)} />
               <div className="docs-tpl-menu glass">
-                {TEMPLATES.map((t) => (
-                  <button key={t.key} onClick={() => addTemplate(t)}>
-                    {t.label}
+                {TEMPLATES.map((tpl) => (
+                  <button key={tpl.key} onClick={() => addTemplate(tpl)}>
+                    {t(tpl.label, tpl.labelEn)}
                   </button>
                 ))}
               </div>
@@ -415,21 +430,21 @@ export function DocsView({
 
         <input
           className="field docs-search"
-          placeholder="문서 검색"
+          placeholder={t('문서 검색', 'Search documents')}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
 
         {query.trim() ? (
           <div className="doc-section">
-            <div className="doc-section-title">검색 결과</div>
+            <div className="doc-section-title">{t('검색 결과', 'Search results')}</div>
             {docs
-              .filter((d) => (d.title || '제목 없음').toLowerCase().includes(query.trim().toLowerCase()))
+              .filter((d) => (d.title || t('제목 없음', 'Untitled')).toLowerCase().includes(query.trim().toLowerCase()))
               .map((d) => (
                 <div key={d.id} className={`doc-item tree ${d.id === activeId ? 'on' : ''}`}>
                   <span className="doc-caret spacer" />
                   <button className="doc-title-btn" onClick={() => open(d)}>
-                    {d.title || '제목 없음'}
+                    {d.title || t('제목 없음', 'Untitled')}
                   </button>
                 </div>
               ))}
@@ -445,7 +460,7 @@ export function DocsView({
                 <div key={d.id} className={`doc-item tree ${d.id === activeId ? 'on' : ''}`}>
                   <span className="doc-caret spacer" />
                   <button className="doc-title-btn" onClick={() => open(d)}>
-                    {d.title || '제목 없음'}
+                    {d.title || t('제목 없음', 'Untitled')}
                   </button>
                 </div>
               )
@@ -453,13 +468,13 @@ export function DocsView({
                 <>
                   {favDocs.length > 0 && (
                     <div className="doc-section">
-                      <div className="doc-section-title">★ 즐겨찾기</div>
+                      <div className="doc-section-title">★ {t('즐겨찾기', 'Favorites')}</div>
                       {favDocs.map(flatRow)}
                     </div>
                   )}
                   {recent.length > 0 && (
                     <div className="doc-section">
-                      <div className="doc-section-title">최근</div>
+                      <div className="doc-section-title">{t('최근', 'Recent')}</div>
                       {recent.map(flatRow)}
                     </div>
                   )}
@@ -470,7 +485,7 @@ export function DocsView({
               const roots = docs.filter((d) => d.scope === s.v && !d.parent_id)
               return (
                 <div key={s.v} className="doc-section">
-                  <div className="doc-section-title">{s.l}</div>
+                  <div className="doc-section-title">{t(s.l, SCOPE_EN[s.v])}</div>
                   {roots.map((d) => renderNode(d, 0))}
                 </div>
               )
@@ -487,11 +502,11 @@ export function DocsView({
                 className="doc-title"
                 value={title}
                 onChange={(e) => onTitle(e.target.value)}
-                placeholder="제목 없음"
+                placeholder={t('제목 없음', 'Untitled')}
               />
-              <span className="save-state">{saved ? '저장됨' : '…'}</span>
+              <span className="save-state">{saved ? t('저장됨', 'Saved') : '…'}</span>
               <div className="scope-control">
-                <button className="scope-chip" onClick={() => setScopeMenu((v) => !v)} title="공유 범위">
+                <button className="scope-chip" onClick={() => setScopeMenu((v) => !v)} title={t('공유 범위', 'Share scope')}>
                   {scopeLabel(scope)} ▾
                 </button>
                 {scopeMenu && (
@@ -507,7 +522,7 @@ export function DocsView({
                             setScopeMenu(false)
                           }}
                         >
-                          {s.l}
+                          {t(s.l, SCOPE_EN[s.v])}
                         </button>
                       ))}
                     </div>
@@ -518,18 +533,18 @@ export function DocsView({
                 className={`btn-mini ghost ${sidePanel === 'comments' ? 'on' : ''}`}
                 onClick={() => setSidePanel((p) => (p === 'comments' ? null : 'comments'))}
               >
-                댓글{comments.length > 0 ? ` ${comments.length}` : ''}
+                {t('댓글', 'Comments')}{comments.length > 0 ? ` ${comments.length}` : ''}
               </button>
               <button
                 className={`btn-mini ghost ${sidePanel === 'versions' ? 'on' : ''}`}
                 onClick={() => (sidePanel === 'versions' ? setSidePanel(null) : openVersions())}
               >
-                버전
+                {t('버전', 'Versions')}
               </button>
-              <button className="btn-mini ghost" onClick={exportMd} title="마크다운으로 내보내기">
-                내보내기
+              <button className="btn-mini ghost" onClick={exportMd} title={t('마크다운으로 내보내기', 'Export as Markdown')}>
+                {t('내보내기', 'Export')}
               </button>
-              <button className="icon-btn small" onClick={del} aria-label="문서 삭제" title="삭제">
+              <button className="icon-btn small" onClick={del} aria-label={t('문서 삭제', 'Delete document')} title={t('삭제', 'Delete')}>
                 ✕
               </button>
             </div>
@@ -546,9 +561,11 @@ export function DocsView({
 
               {sidePanel === 'comments' && (
                 <aside className="doc-side">
-                  <div className="doc-side-head">댓글 {comments.length}</div>
+                  <div className="doc-side-head">{t('댓글', 'Comments')} {comments.length}</div>
                   <div className="doc-side-list">
-                    {comments.length === 0 && <p className="ai-empty">첫 댓글을 남겨보세요.</p>}
+                    {comments.length === 0 && (
+                      <p className="ai-empty">{t('첫 댓글을 남겨보세요.', 'Leave the first comment.')}</p>
+                    )}
                     {comments.map((c) => (
                       <div key={c.id} className="doc-comment">
                         <div className="doc-comment-head">
@@ -578,13 +595,13 @@ export function DocsView({
                     <div className="chat-input doc-comment-compose">
                       <input
                         className="field"
-                        placeholder="댓글 달기"
+                        placeholder={t('댓글 달기', 'Write a comment')}
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && postComment()}
                       />
                       <button className="ai-send" onClick={postComment}>
-                        등록
+                        {t('등록', 'Post')}
                       </button>
                     </div>
                   )}
@@ -594,19 +611,21 @@ export function DocsView({
               {sidePanel === 'versions' && (
                 <aside className="doc-side">
                   <div className="doc-side-head">
-                    버전 히스토리
+                    {t('버전 히스토리', 'Version history')}
                     {userId && (
                       <button className="btn-mini" onClick={snapshotVersion}>
-                        현재 저장
+                        {t('현재 저장', 'Save current')}
                       </button>
                     )}
                   </div>
                   <div className="doc-side-list">
-                    {versions.length === 0 && <p className="ai-empty">저장된 버전이 없어요.</p>}
+                    {versions.length === 0 && (
+                      <p className="ai-empty">{t('저장된 버전이 없어요.', 'No saved versions yet.')}</p>
+                    )}
                     {versions.map((v) => (
                       <div key={v.id} className="doc-version">
                         <div className="doc-version-meta">
-                          <span className="doc-version-title">{v.title || '제목 없음'}</span>
+                          <span className="doc-version-title">{v.title || t('제목 없음', 'Untitled')}</span>
                           <span className="chat-time">
                             {new Date(v.created_at).toLocaleString('ko-KR', {
                               month: 'short',
@@ -617,7 +636,7 @@ export function DocsView({
                           </span>
                         </div>
                         <button className="btn-mini ghost" onClick={() => restoreVersion(v)}>
-                          복원
+                          {t('복원', 'Restore')}
                         </button>
                       </div>
                     ))}
@@ -628,7 +647,7 @@ export function DocsView({
           </>
         ) : (
           <div className="ws-empty">
-            <p className="subtitle">문서를 선택하거나 새로 만드세요</p>
+            <p className="subtitle">{t('문서를 선택하거나 새로 만드세요', 'Select a document or create a new one')}</p>
           </div>
         )}
         {error && <p className="error">{error}</p>}

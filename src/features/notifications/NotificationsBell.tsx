@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { BellIcon } from '../../components/ui/icons'
+import { useT } from '../../lib/i18n'
 import { listNotifications, markAllRead, type Notification } from './notifications'
 
 export function NotificationsBell({ userId }: { userId: string }) {
   const [items, setItems] = useState<Notification[]>([])
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const t = useT()
   const unread = items.filter((n) => !n.read).length
 
   useEffect(() => {
@@ -46,15 +48,15 @@ export function NotificationsBell({ userId }: { userId: string }) {
 
   return (
     <div className="notif" ref={ref}>
-      <button className="icon-btn small notif-btn" onClick={toggle} title="알림" aria-label="알림">
+      <button className="icon-btn small notif-btn" onClick={toggle} title={t('알림', 'Notifications')} aria-label={t('알림', 'Notifications')}>
         <BellIcon />
         {unread > 0 && <span className="notif-badge">{unread > 9 ? '9+' : unread}</span>}
       </button>
       {open && (
         <div className="notif-menu glass">
-          <div className="notif-head">알림</div>
+          <div className="notif-head">{t('알림', 'Notifications')}</div>
           {items.length === 0 ? (
-            <p className="notif-empty">새 알림이 없어요.</p>
+            <p className="notif-empty">{t('새 알림이 없어요.', 'No new notifications.')}</p>
           ) : (
             <div className="notif-list">
               {items.map((n) => (

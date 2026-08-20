@@ -11,6 +11,7 @@ import {
   type Member,
 } from './teams'
 import { CloseIcon } from '../../components/ui/icons'
+import { useT } from '../../lib/i18n'
 
 export function GroupSettings({
   group,
@@ -29,6 +30,7 @@ export function GroupSettings({
   const [members, setMembers] = useState<Member[]>([])
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
+  const t = useT()
 
   const loadMembers = () => {
     getGroupMembers(group.id).then(setMembers).catch((e) => setError((e as Error).message))
@@ -85,37 +87,37 @@ export function GroupSettings({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="glass modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="그룹 설정">
+      <div className="glass modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={t('그룹 설정', 'Group settings')}>
         <div className="modal-head">
-          <h2>그룹 설정</h2>
-          <button className="icon-btn small" onClick={onClose} aria-label="닫기">
+          <h2>{t('그룹 설정', 'Group settings')}</h2>
+          <button className="icon-btn small" onClick={onClose} aria-label={t('닫기', 'Close')}>
             <CloseIcon />
           </button>
         </div>
 
         <section className="setting-group">
-          <div className="section-title">그룹 이름</div>
+          <div className="section-title">{t('그룹 이름', 'Group name')}</div>
           <div className="row">
             <input className="field" style={{ flex: 1 }} value={name} onChange={(e) => setName(e.target.value)} />
             <button className="btn-mini" onClick={saveName} disabled={!name.trim() || name === group.name}>
-              저장
+              {t('저장', 'Save')}
             </button>
           </div>
         </section>
 
         <section className="setting-group">
-          <div className="section-title">초대 링크</div>
+          <div className="section-title">{t('초대 링크', 'Invite link')}</div>
           <div className="invite-field">
             <span className="invite-link">{inviteLink || '—'}</span>
             <button className="btn-mini" onClick={copyLink}>
-              {copied ? '복사됨' : '링크 복사'}
+              {copied ? t('복사됨', 'Copied') : t('링크 복사', 'Copy link')}
             </button>
           </div>
-          <p className="ws-hint" style={{ padding: 0 }}>이 링크를 공유하면 그룹에 참가합니다.</p>
+          <p className="ws-hint" style={{ padding: 0 }}>{t('이 링크를 공유하면 그룹에 참가합니다.', 'Sharing this link lets others join the group.')}</p>
         </section>
 
         <section className="setting-group">
-          <div className="section-title">멤버 · {members.length}</div>
+          <div className="section-title">{t('멤버', 'Members')} · {members.length}</div>
           {members.map((m) => {
             const isMemberOwner = m.user_id === group.owner_id
             const isAdmin = m.role === 'admin'
@@ -128,18 +130,18 @@ export function GroupSettings({
                     {m.job_role && !isMemberOwner ? ` · ${m.job_role}` : ''}
                   </span>
                   {isMemberOwner ? (
-                    <span className="role-chip">대표</span>
+                    <span className="role-chip">{t('대표', 'Owner')}</span>
                   ) : (
-                    isAdmin && <span className="role-chip admin">관리자</span>
+                    isAdmin && <span className="role-chip admin">{t('관리자', 'Admin')}</span>
                   )}
                 </span>
                 {isOwner && !isMemberOwner && (
                   <span className="row-actions">
                     <button className="btn-mini ghost" onClick={() => changeRole(m.user_id, isAdmin ? 'member' : 'admin')}>
-                      {isAdmin ? '관리자 해제' : '관리자 지정'}
+                      {isAdmin ? t('관리자 해제', 'Remove admin') : t('관리자 지정', 'Make admin')}
                     </button>
                     <button className="danger-btn" onClick={() => kick(m.user_id)}>
-                      내보내기
+                      {t('내보내기', 'Remove')}
                     </button>
                   </span>
                 )}
@@ -149,35 +151,35 @@ export function GroupSettings({
         </section>
 
         <section className="setting-group">
-          <div className="section-title">팀 · {teams.length}</div>
-          {teams.map((t) => (
-            <div key={t.id} className="list-row">
+          <div className="section-title">{t('팀', 'Teams')} · {teams.length}</div>
+          {teams.map((team) => (
+            <div key={team.id} className="list-row">
               <span className="member-row-left">
                 <span className="hash">#</span>
-                <span className="name">{t.name}</span>
+                <span className="name">{team.name}</span>
               </span>
               <span className="row-actions">
                 <button
-                  className={`btn-mini ghost ${!t.auto_approve ? 'on' : ''}`}
+                  className={`btn-mini ghost ${!team.auto_approve ? 'on' : ''}`}
                   onClick={async () => {
                     try {
-                      await setAutoApprove(t.id, !t.auto_approve)
+                      await setAutoApprove(team.id, !team.auto_approve)
                       onChanged()
                     } catch (e) {
                       setError((e as Error).message)
                     }
                   }}
-                  title="켜면 비팀원 입장 시 호스트 승인을 받습니다"
+                  title={t('켜면 비팀원 입장 시 호스트 승인을 받습니다', 'When on, non-members need host approval to join')}
                 >
-                  {t.auto_approve ? '대기실 꺼짐' : '대기실 켜짐'}
+                  {team.auto_approve ? t('대기실 꺼짐', 'Waiting room off') : t('대기실 켜짐', 'Waiting room on')}
                 </button>
-                <button className="danger-btn" onClick={() => removeTeam(t.id)}>
-                  삭제
+                <button className="danger-btn" onClick={() => removeTeam(team.id)}>
+                  {t('삭제', 'Delete')}
                 </button>
               </span>
             </div>
           ))}
-          {teams.length === 0 && <p className="ws-hint" style={{ padding: 0 }}>팀이 없습니다.</p>}
+          {teams.length === 0 && <p className="ws-hint" style={{ padding: 0 }}>{t('팀이 없습니다.', 'No teams yet.')}</p>}
         </section>
 
         {error && <p className="error">{error}</p>}

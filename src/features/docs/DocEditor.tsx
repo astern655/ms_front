@@ -6,6 +6,7 @@ import { useCreateBlockNote } from '@blocknote/react'
 import { BlockNoteView } from '@blocknote/mantine'
 import '@blocknote/mantine/style.css'
 import { SupabaseYProvider } from './yjsSupabase'
+import { useT } from '../../lib/i18n'
 
 function parseContent(content: string): PartialBlock[] | undefined {
   if (!content) return undefined
@@ -35,7 +36,7 @@ export function DocEditor({
   lang = 'ko',
   docId,
   groupId,
-  userName = '익명',
+  userName,
 }: {
   content: string
   onChange: (json: string) => void
@@ -44,6 +45,8 @@ export function DocEditor({
   groupId?: string
   userName?: string
 }) {
+  const t = useT()
+  const displayName = userName || t('익명', 'Anonymous')
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   // Gate persistence until the shared doc has seeded/backfilled — prevents the empty
   // pre-seed editor from overwriting stored content (data loss).
@@ -66,7 +69,7 @@ export function DocEditor({
           collaboration: {
             provider: collab.provider,
             fragment: collab.doc.getXmlFragment('document-store'),
-            user: { name: userName, color: colorFor(userName) },
+            user: { name: displayName, color: colorFor(displayName) },
           },
         }
       : { initialContent: parseContent(content) }),

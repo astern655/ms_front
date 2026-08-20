@@ -2109,6 +2109,37 @@ option {
   color: var(--danger);
   border-color: color-mix(in srgb, var(--danger) 45%, transparent);
 }
+.sign-panel {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  z-index: 6;
+  width: 220px;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sign-preview {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  background: #000;
+  transform: scaleX(-1); /* mirror like a selfie */
+}
+.sign-status {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--text-2);
+}
+.sign-status.on {
+  color: var(--text);
+}
+.sign-detected {
+  color: var(--accent-2);
+}
 .breakout-banner {
   position: absolute;
   top: 16px;

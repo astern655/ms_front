@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useT } from '../../lib/i18n'
 import { getGroupMembers, type Member } from '../groups/teams'
 import {
   listMessages,
@@ -41,6 +42,7 @@ export function TeamChat({
   const [uploading, setUploading] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const t = useT()
 
   const scroll = () =>
     requestAnimationFrame(() => listRef.current?.scrollTo({ top: 1e9, behavior: 'smooth' }))
@@ -168,13 +170,13 @@ export function TeamChat({
           {teamName}
         </span>
         <button className="btn-primary chat-join" onClick={onEnterMeeting}>
-          회의 입장
+          {t('회의 입장', 'Join meeting')}
         </button>
       </div>
 
       {pinned.length > 0 && (
         <div className="chat-pins">
-          <span className="chat-pins-label">📌 고정 {pinned.length}</span>
+          <span className="chat-pins-label">📌 {t('고정', 'Pinned')} {pinned.length}</span>
           {pinned.map((m) => (
             <span key={m.id} className="chat-pin-item" title={m.content}>
               {m.author_name}: {m.content.slice(0, 40)}
@@ -184,7 +186,11 @@ export function TeamChat({
       )}
 
       <div className="chat-msgs" ref={listRef}>
-        {messages.length === 0 && <p className="ai-empty">첫 메시지를 남겨보세요. @이름으로 멘션할 수 있어요.</p>}
+        {messages.length === 0 && (
+          <p className="ai-empty">
+            {t('첫 메시지를 남겨보세요. @이름으로 멘션할 수 있어요.', 'Leave the first message. You can mention with @name.')}
+          </p>
+        )}
         {messages.map((m) => {
           const mine = m.user_id === userId
           const rx = reactionsByMsg[m.id] ?? {}
@@ -195,15 +201,15 @@ export function TeamChat({
                 <span className="chat-time">{new Date(m.created_at).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}</span>
                 <div className="chat-msg-actions">
                   {EMOJIS.map((e) => (
-                    <button key={e} onClick={() => react(m, e)} title="반응">
+                    <button key={e} onClick={() => react(m, e)} title={t('반응', 'React')}>
                       {e}
                     </button>
                   ))}
-                  <button onClick={() => setPinned(m.id, !m.pinned).catch(() => {})} title="고정">
+                  <button onClick={() => setPinned(m.id, !m.pinned).catch(() => {})} title={t('고정', 'Pin')}>
                     📌
                   </button>
                   {mine && (
-                    <button onClick={() => deleteMessage(m.id).catch(() => {})} title="삭제">
+                    <button onClick={() => deleteMessage(m.id).catch(() => {})} title={t('삭제', 'Delete')}>
                       ✕
                     </button>
                   )}
@@ -212,7 +218,7 @@ export function TeamChat({
               <div className="chat-body">
                 {IMG_RE.test(m.content.trim()) ? (
                   <a href={m.content.trim()} target="_blank" rel="noreferrer">
-                    <img className="chat-image" src={m.content.trim()} alt="첨부 이미지" />
+                    <img className="chat-image" src={m.content.trim()} alt={t('첨부 이미지', 'Attached image')} />
                   </a>
                 ) : (
                   renderContent(m.content)
@@ -252,20 +258,20 @@ export function TeamChat({
           className="chat-attach"
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
-          title="이미지 첨부"
-          aria-label="이미지 첨부"
+          title={t('이미지 첨부', 'Attach image')}
+          aria-label={t('이미지 첨부', 'Attach image')}
         >
           {uploading ? '…' : '📎'}
         </button>
         <input
           className="field"
-          placeholder={`#${teamName}에 메시지 (@이름 멘션)`}
+          placeholder={t(`#${teamName}에 메시지 (@이름 멘션)`, `Message #${teamName} (@name to mention)`)}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && send()}
         />
         <button className="ai-send" onClick={send}>
-          보내기
+          {t('보내기', 'Send')}
         </button>
       </div>
       {error && <p className="error">{error}</p>}

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
+import { useT } from '../../lib/i18n'
 
 type Mode = 'login' | 'signup'
 
@@ -10,6 +11,7 @@ export function AuthScreen() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+  const t = useT()
 
   const submit = async () => {
     setError('')
@@ -24,7 +26,12 @@ export function AuthScreen() {
         const { data, error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
         if (!data.session) {
-          setNotice('확인 메일을 보냈어요. 메일의 링크를 눌러 인증한 뒤 로그인하세요.')
+          setNotice(
+            t(
+              '확인 메일을 보냈어요. 메일의 링크를 눌러 인증한 뒤 로그인하세요.',
+              'We sent a confirmation email. Click the link in it to verify, then log in.',
+            ),
+          )
           setMode('login')
         }
       }
@@ -59,7 +66,7 @@ export function AuthScreen() {
         <div className="brand-lockup">
           <img className="brand-logo" src="/weavia-logo.png" alt="WEAVIA" />
           <h1 className="brand">WEAVIA</h1>
-          <p className="subtitle">경계 없는 협업 공간</p>
+          <p className="subtitle">{t('경계 없는 협업 공간', 'Collaboration without boundaries')}</p>
         </div>
 
         <button className="btn-google" onClick={signInGoogle} disabled={busy}>
@@ -81,26 +88,26 @@ export function AuthScreen() {
               d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4 5.6l6.4 5.4C41.6 36.3 43.5 30.6 43.5 24c0-1.2-.1-2.3-.4-3.5z"
             />
           </svg>
-          Google로 계속하기
+          {t('Google로 계속하기', 'Continue with Google')}
         </button>
 
         <div className="auth-divider">
-          <span>또는 이메일로</span>
+          <span>{t('또는 이메일로', 'or with email')}</span>
         </div>
 
-        <div className="segmented" role="tablist" aria-label="인증">
+        <div className="segmented" role="tablist" aria-label={t('인증', 'Authentication')}>
           <button role="tab" aria-selected={mode === 'login'} onClick={() => setMode('login')}>
-            로그인
+            {t('로그인', 'Log in')}
           </button>
           <button role="tab" aria-selected={mode === 'signup'} onClick={() => setMode('signup')}>
-            회원가입
+            {t('회원가입', 'Sign up')}
           </button>
         </div>
 
         <input
           className="field"
           type="email"
-          placeholder="이메일"
+          placeholder={t('이메일', 'Email')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
@@ -108,7 +115,7 @@ export function AuthScreen() {
         <input
           className="field"
           type="password"
-          placeholder="비밀번호 (6자 이상)"
+          placeholder={t('비밀번호 (6자 이상)', 'Password (6+ characters)')}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && canSubmit && submit()}
@@ -116,7 +123,11 @@ export function AuthScreen() {
         />
 
         <button className="btn-primary" disabled={!canSubmit} onClick={submit}>
-          {busy ? '처리 중…' : mode === 'login' ? '로그인' : '회원가입'}
+          {busy
+            ? t('처리 중…', 'Processing…')
+            : mode === 'login'
+              ? t('로그인', 'Log in')
+              : t('회원가입', 'Sign up')}
         </button>
 
         {notice && <p className="subtitle">{notice}</p>}

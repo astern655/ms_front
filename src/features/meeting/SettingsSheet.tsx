@@ -2,6 +2,7 @@ import { useEffect, useState, type RefObject } from 'react'
 import { useMediaDeviceSelect } from '@livekit/components-react'
 import { MicIcon, SpeakerIcon, VideoIcon, CloseIcon } from '../../components/ui/icons'
 import { Select } from '../../components/ui/Select'
+import { useT } from '../../lib/i18n'
 
 function DeviceSelect({
   kind,
@@ -46,6 +47,7 @@ export function SettingsSheet({
   speakerVolume: number
   setSpeakerVolume: (v: number) => void
 }) {
+  const t = useT()
   const [micGain, setMicGain] = useState(100)
   const [level, setLevel] = useState(0)
   const [micDevices, setMicDevices] = useState<MediaDeviceInfo[]>([])
@@ -79,23 +81,23 @@ export function SettingsSheet({
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="glass sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="설정">
+      <div className="glass sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={t('설정', 'Settings')}>
         <div className="sheet-grabber" />
         <div className="sheet-head">
-          <h2>설정</h2>
-          <button className="icon-btn small" onClick={onClose} aria-label="닫기">
+          <h2>{t('설정', 'Settings')}</h2>
+          <button className="icon-btn small" onClick={onClose} aria-label={t('닫기', 'Close')}>
             <CloseIcon />
           </button>
         </div>
 
         <section className="setting-group">
-          <div className="setting-label"><MicIcon /> 마이크</div>
-          <DeviceSelect kind="마이크" devices={micDevices} activeId={activeMic} onChange={setMicDeviceId} />
+          <div className="setting-label"><MicIcon /> {t('마이크', 'Microphone')}</div>
+          <DeviceSelect kind={t('마이크', 'Microphone')} devices={micDevices} activeId={activeMic} onChange={setMicDeviceId} />
           <div className="meter">
             <div className="meter-fill" style={{ width: `${Math.round(level * 100)}%` }} />
           </div>
           <div className="slider-row">
-            <span className="subtitle">입력 볼륨</span>
+            <span className="subtitle">{t('입력 볼륨', 'Input volume')}</span>
             <input
               type="range" min={0} max={200} value={micGain}
               onChange={(e) => {
@@ -109,15 +111,15 @@ export function SettingsSheet({
         </section>
 
         <section className="setting-group">
-          <div className="setting-label"><SpeakerIcon /> 스피커</div>
+          <div className="setting-label"><SpeakerIcon /> {t('스피커', 'Speaker')}</div>
           <DeviceSelect
-            kind="스피커"
+            kind={t('스피커', 'Speaker')}
             devices={speaker.devices}
             activeId={speaker.activeDeviceId}
             onChange={(id) => speaker.setActiveMediaDevice(id)}
           />
           <div className="slider-row">
-            <span className="subtitle">출력 볼륨</span>
+            <span className="subtitle">{t('출력 볼륨', 'Output volume')}</span>
             <input
               type="range" min={0} max={100} value={speakerVolume}
               onChange={(e) => setSpeakerVolume(Number(e.target.value))}
@@ -127,9 +129,9 @@ export function SettingsSheet({
         </section>
 
         <section className="setting-group">
-          <div className="setting-label"><VideoIcon /> 카메라</div>
+          <div className="setting-label"><VideoIcon /> {t('카메라', 'Camera')}</div>
           <DeviceSelect
-            kind="카메라"
+            kind={t('카메라', 'Camera')}
             devices={camera.devices}
             activeId={camera.activeDeviceId}
             onChange={(id) => camera.setActiveMediaDevice(id)}

@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { listPendingRequests, resolveRequest, type MeetingRequest } from '../groups/teams'
+import { useT } from '../../lib/i18n'
 
 // Host-side waiting room: shows pending join requests for the current meeting and
 // lets a member approve/deny. Only team members can read these rows (RLS).
 export function WaitingRoom({ teamId }: { teamId: string }) {
+  const t = useT()
   const [pending, setPending] = useState<MeetingRequest[]>([])
 
   useEffect(() => {
@@ -32,16 +34,16 @@ export function WaitingRoom({ teamId }: { teamId: string }) {
 
   return (
     <div className="waitroom glass">
-      <div className="waitroom-head">입장 요청 {pending.length}</div>
+      <div className="waitroom-head">{t('입장 요청', 'Join requests')} {pending.length}</div>
       {pending.map((r) => (
         <div key={r.id} className="waitroom-item">
           <span className="avatar sm">{(r.name || '?').slice(0, 2)}</span>
           <span className="waitroom-name">{r.name}</span>
           <button className="btn-mini" onClick={() => resolveRequest(r.id, 'approved').catch(() => {})}>
-            승인
+            {t('승인', 'Approve')}
           </button>
           <button className="btn-mini ghost" onClick={() => resolveRequest(r.id, 'denied').catch(() => {})}>
-            거절
+            {t('거절', 'Deny')}
           </button>
         </div>
       ))}

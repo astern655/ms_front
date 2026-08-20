@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase, type Profile } from './lib/supabase'
 import { AuthScreen } from './features/auth/AuthScreen'
 import { Onboarding } from './features/auth/Onboarding'
 import { Workspace } from './features/workspace/Workspace'
 import { joinGroupByCode } from './features/groups/teams'
+import { LangProvider, browserLang, type Lang } from './lib/i18n'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
@@ -57,27 +58,34 @@ export default function App() {
   }, [invite, session, profile])
 
   if (!ready) return null
-  if (!session) return <AuthScreen />
-  if (!profileChecked) return null
-  if (!profile)
-    return (
+
+  const lang: Lang = profile?.language === 'en' ? 'en' : profile?.language === 'ko' ? 'ko' : browserLang()
+
+  let content: ReactNode = null
+  if (!session) content = <AuthScreen />
+  else if (!profileChecked) content = null
+  else if (!profile)
+    content = (
       <Onboarding
         userId={session.user.id}
         defaultName={session.user.email?.split('@')[0]}
         onDone={setProfile}
       />
     )
-  if (invite) return null
-  return (
-    <Workspace
-      profile={{
-        id: profile.id,
-        name: profile.name,
-        language: profile.language,
-        job_role: profile.job_role,
-      }}
-      onSignOut={() => supabase.auth.signOut()}
-      onProfileChange={(p) => setProfile((prev) => (prev ? { ...prev, ...p } : prev))}
-    />
-  )
+  else if (invite) content = null
+  else
+    content = (
+      <Workspace
+        profile={{
+          id: profile.id,
+          name: profile.name,
+          language: profile.language,
+          job_role: profile.job_role,
+        }}
+        onSignOut={() => supabase.auth.signOut()}
+        onProfileChange={(p) => setProfile((prev) => (prev ? { ...prev, ...p } : prev))}
+      />
+    )
+
+  return <LangProvider value={lang}>{content}</LangProvider>
 }

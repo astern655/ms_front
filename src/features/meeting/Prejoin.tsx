@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { usePreviewTracks } from '@livekit/components-react'
 import { Track, type LocalVideoTrack } from 'livekit-client'
 import { MicIcon, MicOffIcon, VideoIcon, VideoOffIcon } from '../../components/ui/icons'
+import { useT } from '../../lib/i18n'
 
 // Device preview before joining: pick camera/mic on-off and see yourself.
 export function Prejoin({
@@ -15,6 +16,7 @@ export function Prejoin({
   onJoin: (choices: { video: boolean; audio: boolean }) => void
   onCancel: () => void
 }) {
+  const t = useT()
   const [video, setVideo] = useState(true)
   const [audio, setAudio] = useState(true)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -41,21 +43,21 @@ export function Prejoin({
           ) : (
             <div className="prejoin-off">
               <span className="avatar lg">{name.slice(0, 2)}</span>
-              <span>카메라 꺼짐</span>
+              <span>{t('카메라 꺼짐', 'Camera off')}</span>
             </div>
           )}
           <div className="prejoin-devbar">
             <button
               className={`ctrl ${video ? 'ctrl-on' : 'ctrl-off'}`}
               onClick={() => setVideo((v) => !v)}
-              title="카메라"
+              title={t('카메라', 'Camera')}
             >
               {video ? <VideoIcon /> : <VideoOffIcon />}
             </button>
             <button
               className={`ctrl ${audio ? 'ctrl-on' : 'ctrl-off'}`}
               onClick={() => setAudio((v) => !v)}
-              title="마이크"
+              title={t('마이크', 'Microphone')}
             >
               {audio ? <MicIcon /> : <MicOffIcon />}
             </button>
@@ -64,13 +66,13 @@ export function Prejoin({
 
         <div className="prejoin-side">
           <h2 className="prejoin-title"># {teamName}</h2>
-          <p className="subtitle">입장 전 카메라와 마이크를 확인하세요.</p>
+          <p className="subtitle">{t('입장 전 카메라와 마이크를 확인하세요.', 'Check your camera and mic before joining.')}</p>
           <div className="prejoin-actions">
             <button className="btn-primary" onClick={() => onJoin({ video, audio })}>
-              입장하기
+              {t('입장하기', 'Join')}
             </button>
             <button className="btn-ghost" onClick={onCancel}>
-              취소
+              {t('취소', 'Cancel')}
             </button>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { updateProfile } from './teams'
 import { CloseIcon } from '../../components/ui/icons'
 import { Select } from '../../components/ui/Select'
+import { useT } from '../../lib/i18n'
 
 const JOB_ROLES = ['기획/PM', '디자인', '프론트엔드', '백엔드', 'AI/데이터', '기타']
 
@@ -19,6 +20,7 @@ export function ProfileEdit({
   const [jobRole, setJobRole] = useState(profile.job_role || JOB_ROLES[0])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const t = useT()
 
   const save = async () => {
     setError('')
@@ -37,21 +39,21 @@ export function ProfileEdit({
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="glass modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="프로필 수정">
+      <div className="glass modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={t('프로필 수정', 'Edit profile')}>
         <div className="modal-head">
-          <h2>프로필 수정</h2>
-          <button className="icon-btn small" onClick={onClose} aria-label="닫기">
+          <h2>{t('프로필 수정', 'Edit profile')}</h2>
+          <button className="icon-btn small" onClick={onClose} aria-label={t('닫기', 'Close')}>
             <CloseIcon />
           </button>
         </div>
 
         <div className="avatar lg">{(name || '?').slice(0, 2)}</div>
 
-        <input className="field" placeholder="이름" value={name} onChange={(e) => setName(e.target.value)} />
+        <input className="field" placeholder={t('이름', 'Name')} value={name} onChange={(e) => setName(e.target.value)} />
 
         <div className="lang-row">
-          <span className="subtitle">언어</span>
-          <div className="segmented compact" role="tablist" aria-label="언어">
+          <span className="subtitle">{t('언어', 'Language')}</span>
+          <div className="segmented compact" role="tablist" aria-label={t('언어', 'Language')}>
             <button role="tab" aria-selected={language === 'ko'} onClick={() => setLanguage('ko')}>
               한국어
             </button>
@@ -62,7 +64,7 @@ export function ProfileEdit({
         </div>
 
         <div className="lang-row">
-          <span className="subtitle">직군</span>
+          <span className="subtitle">{t('직군', 'Role')}</span>
           <div style={{ flex: 1, maxWidth: 220 }}>
             <Select
               value={jobRole}
@@ -73,7 +75,7 @@ export function ProfileEdit({
         </div>
 
         <button className="btn-primary" disabled={!name.trim() || busy} onClick={save}>
-          {busy ? '저장 중…' : '저장'}
+          {busy ? t('저장 중…', 'Saving…') : t('저장', 'Save')}
         </button>
         {error && <p className="error">{error}</p>}
       </div>

@@ -16,11 +16,13 @@ import { BackgroundBlur } from '@livekit/track-processors'
 import { Captions } from './Captions'
 import { WaitingRoom } from './WaitingRoom'
 import { API_BASE } from '../../lib/api'
+import { useT } from '../../lib/i18n'
 import { SettingsSheet } from './SettingsSheet'
 import { ChatFeed } from './ChatPanel'
 import { DocsView } from '../docs/DocsView'
 import { useLocalMic } from './useLocalMic'
 import { useCaptions } from './useCaptions'
+import type { SignStatus } from './sign'
 import {
   MicIcon,
   MicOffIcon,
@@ -48,6 +50,7 @@ function ParticipantsSheet({
   canHost?: boolean
   room?: string
 }) {
+  const t = useT()
   const participants = useParticipants()
   const hostAction = (action: 'mute' | 'remove', identity: string) => {
     if (!room) return
@@ -60,11 +63,11 @@ function ParticipantsSheet({
   if (!open) return null
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="glass sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="참가자">
+      <div className="glass sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={t('참가자', 'Participants')}>
         <div className="sheet-grabber" />
         <div className="sheet-head">
-          <h2>참가자 {participants.length}</h2>
-          <button className="icon-btn small" onClick={onClose} aria-label="닫기">
+          <h2>{t('참가자', 'Participants')} {participants.length}</h2>
+          <button className="icon-btn small" onClick={onClose} aria-label={t('닫기', 'Close')}>
             <CloseIcon />
           </button>
         </div>
@@ -73,7 +76,7 @@ function ParticipantsSheet({
             <div key={p.identity} className="roster-item">
               <span className="roster-name">
                 {p.name || p.identity}
-                {p.isLocal ? ' (나)' : ''}
+                {p.isLocal ? t(' (나)', ' (me)') : ''}
               </span>
               <span className={`roster-mic ${p.isMicrophoneEnabled ? 'on' : 'off'}`}>
                 {p.isMicrophoneEnabled ? <MicIcon /> : <MicOffIcon />}
@@ -81,10 +84,10 @@ function ParticipantsSheet({
               {canHost && !p.isLocal && (
                 <span className="roster-host">
                   <button className="btn-mini ghost" onClick={() => hostAction('mute', p.identity)}>
-                    음소거
+                    {t('음소거', 'Mute')}
                   </button>
                   <button className="btn-mini ghost danger" onClick={() => hostAction('remove', p.identity)}>
-                    내보내기
+                    {t('내보내기', 'Remove')}
                   </button>
                 </span>
               )}
@@ -204,6 +207,7 @@ function RoomInner({
   onSwitchBreakout?: (suffix: string) => void
   canHost?: boolean
 }) {
+  const t = useT()
   const [breakoutOpen, setBreakoutOpen] = useState(false)
   const roomName = teamId ? `team:${teamId}${roomSuffix ? ':' + roomSuffix : ''}` : undefined
   const room = useRoomContext()
@@ -212,6 +216,8 @@ function RoomInner({
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [peopleOpen, setPeopleOpen] = useState(false)
   const [signOn, setSignOn] = useState(false)
+  const [signVideo, setSignVideo] = useState<HTMLVideoElement | null>(null)
+  const [signStatus, setSignStatus] = useState<SignStatus | null>(null)
   const [blurOn, setBlurOn] = useState(false)
   const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
   const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
@@ -267,6 +273,8 @@ function RoomInner({
     sourceLang: lang,
     targetLangs: ['ko', 'en'],
     signEnabled: signOn,
+    signVideoEl: signVideo,
+    onSignStatus: setSignStatus,
   })
 
   return (
@@ -274,11 +282,27 @@ function RoomInner({
       <div className="stage-area">
         <Stage />
         {teamId && <WaitingRoom teamId={teamId} />}
+        {signOn && (
+          <div className="sign-panel glass">
+            <video ref={setSignVideo} className="sign-preview" muted playsInline />
+            <div className={`sign-status ${signStatus?.hand ? 'on' : ''}`}>
+              {!signStatus?.ready ? (
+                <span>{t('수화 카메라 준비 중…', 'Preparing sign camera…')}</span>
+              ) : signStatus.label ? (
+                <span className="sign-detected">✋ {signStatus.label}</span>
+              ) : signStatus.hand ? (
+                <span>{t('✋ 손 인식됨 — 제스처를 취해보세요', '✋ Hand detected — try a gesture')}</span>
+              ) : (
+                <span>{t('손을 화면에 보여주세요', 'Show your hand to the camera')}</span>
+              )}
+            </div>
+          </div>
+        )}
         {roomSuffix && (
           <div className="breakout-banner glass">
-            <span>브레이크아웃 · {breakoutLabel(roomSuffix)}</span>
+            <span>{t('브레이크아웃', 'Breakout')} · {t(breakoutLabel(roomSuffix), `Group ${roomSuffix.replace('b', '')}`)}</span>
             <button className="btn-mini" onClick={() => onSwitchBreakout?.('')}>
-              메인으로 돌아가기
+              {t('메인으로 돌아가기', 'Back to main room')}
             </button>
           </div>
         )}
@@ -290,77 +314,77 @@ function RoomInner({
               className={`ctrl ${mic.muted ? 'ctrl-off' : 'ctrl-on'}`}
               onClick={mic.toggleMute}
               aria-pressed={!mic.muted}
-              aria-label="마이크"
-              title="마이크"
+              aria-label={t('마이크', 'Microphone')}
+              title={t('마이크', 'Microphone')}
             >
               {mic.muted ? <MicOffIcon /> : <MicIcon />}
             </button>
-            <span className="ctrl-label">마이크</span>
+            <span className="ctrl-label">{t('마이크', 'Mic')}</span>
           </div>
-          <Toggle source={Track.Source.Camera} on={<VideoIcon />} off={<VideoOffIcon />} label="카메라" />
-          <Toggle source={Track.Source.ScreenShare} on={<ScreenIcon />} off={<ScreenIcon />} label="화면 공유" />
+          <Toggle source={Track.Source.Camera} on={<VideoIcon />} off={<VideoOffIcon />} label={t('카메라', 'Camera')} />
+          <Toggle source={Track.Source.ScreenShare} on={<ScreenIcon />} off={<ScreenIcon />} label={t('화면 공유', 'Share screen')} />
           <div className="ctrl-item">
             <button
               className={`ctrl ${settingsOpen ? 'ctrl-on' : 'ctrl-off'}`}
               onClick={() => setSettingsOpen((v) => !v)}
-              aria-label="설정"
-              title="설정"
+              aria-label={t('설정', 'Settings')}
+              title={t('설정', 'Settings')}
             >
               <SettingsIcon />
             </button>
-            <span className="ctrl-label">설정</span>
+            <span className="ctrl-label">{t('설정', 'Settings')}</span>
           </div>
           <div className="ctrl-item">
             <button
               className={`ctrl ${panel === 'chat' ? 'ctrl-on' : 'ctrl-off'}`}
               onClick={() => togglePanel('chat')}
-              aria-label="채팅·자막"
-              title="채팅·자막"
+              aria-label={t('채팅·자막', 'Chat & captions')}
+              title={t('채팅·자막', 'Chat & captions')}
             >
               <ChatIcon />
             </button>
-            <span className="ctrl-label">채팅·자막</span>
+            <span className="ctrl-label">{t('채팅·자막', 'Chat & captions')}</span>
           </div>
           <div className="ctrl-item">
             <button
               className={`ctrl ${signOn ? 'ctrl-on' : 'ctrl-off'}`}
               onClick={() => setSignOn((v) => !v)}
               aria-pressed={signOn}
-              aria-label="수화"
-              title="수화 인식"
+              aria-label={t('수화', 'Sign language')}
+              title={t('수화 인식', 'Sign language recognition')}
             >
               <SignIcon />
             </button>
-            <span className="ctrl-label">수화</span>
+            <span className="ctrl-label">{t('수화', 'Sign')}</span>
           </div>
           <div className="ctrl-item">
             <button
               className={`ctrl ${blurOn ? 'ctrl-on' : 'ctrl-off'}`}
               onClick={() => setBlurOn((v) => !v)}
               aria-pressed={blurOn}
-              aria-label="배경 흐림"
-              title="배경 흐림"
+              aria-label={t('배경 흐림', 'Background blur')}
+              title={t('배경 흐림', 'Background blur')}
             >
               <BlurIcon />
             </button>
-            <span className="ctrl-label">배경 흐림</span>
+            <span className="ctrl-label">{t('배경 흐림', 'Blur')}</span>
           </div>
           {breakoutEnabled && (
             <div className="ctrl-item breakout-ctrl">
               <button
                 className={`ctrl ${roomSuffix ? 'ctrl-on' : 'ctrl-off'}`}
                 onClick={() => setBreakoutOpen((v) => !v)}
-                aria-label="브레이크아웃"
-                title="브레이크아웃 룸"
+                aria-label={t('브레이크아웃', 'Breakout')}
+                title={t('브레이크아웃 룸', 'Breakout rooms')}
               >
                 <PeopleIcon />
               </button>
-              <span className="ctrl-label">브레이크아웃</span>
+              <span className="ctrl-label">{t('브레이크아웃', 'Breakout')}</span>
               {breakoutOpen && (
                 <>
                   <div className="menu-catch" onClick={() => setBreakoutOpen(false)} />
                   <div className="breakout-menu glass">
-                    <div className="breakout-menu-head">브레이크아웃 룸</div>
+                    <div className="breakout-menu-head">{t('브레이크아웃 룸', 'Breakout rooms')}</div>
                     <button
                       className={`breakout-opt ${!roomSuffix ? 'on' : ''}`}
                       onClick={() => {
@@ -368,7 +392,7 @@ function RoomInner({
                         setBreakoutOpen(false)
                       }}
                     >
-                      메인 룸
+                      {t('메인 룸', 'Main room')}
                     </button>
                     {BREAKOUTS.map((b) => (
                       <button
@@ -379,7 +403,7 @@ function RoomInner({
                           setBreakoutOpen(false)
                         }}
                       >
-                        {breakoutLabel(b)}
+                        {t(breakoutLabel(b), `Group ${b.replace('b', '')}`)}
                       </button>
                     ))}
                   </div>
@@ -391,35 +415,35 @@ function RoomInner({
             <button
               className={`ctrl ${peopleOpen ? 'ctrl-on' : 'ctrl-off'}`}
               onClick={() => setPeopleOpen((v) => !v)}
-              aria-label="참가자"
-              title="참가자"
+              aria-label={t('참가자', 'Participants')}
+              title={t('참가자', 'Participants')}
             >
               <PeopleIcon />
             </button>
-            <span className="ctrl-label">참가자</span>
+            <span className="ctrl-label">{t('참가자', 'Participants')}</span>
           </div>
           <div className="ctrl-item">
             <button
               className={`ctrl ${panel === 'docs' ? 'ctrl-on' : 'ctrl-off'}`}
               onClick={() => togglePanel('docs')}
-              aria-label="문서"
-              title="문서"
+              aria-label={t('문서', 'Docs')}
+              title={t('문서', 'Docs')}
             >
               <DocIcon />
             </button>
-            <span className="ctrl-label">문서</span>
+            <span className="ctrl-label">{t('문서', 'Docs')}</span>
           </div>
           <span className="ctrl-divider" />
           <div className="ctrl-item">
             <button
               className="ctrl ctrl-leave"
               onClick={() => room.disconnect()}
-              aria-label="나가기"
-              title="나가기"
+              aria-label={t('나가기', 'Leave')}
+              title={t('나가기', 'Leave')}
             >
               <LeaveIcon />
             </button>
-            <span className="ctrl-label leave">나가기</span>
+            <span className="ctrl-label leave">{t('나가기', 'Leave')}</span>
           </div>
         </div>
 
@@ -444,15 +468,15 @@ function RoomInner({
 
       {panel && (
         <div className="dock" style={{ width: dockWidth }}>
-          <div className="dock-resize" onMouseDown={startResize} title="드래그로 크기 조절" />
+          <div className="dock-resize" onMouseDown={startResize} title={t('드래그로 크기 조절', 'Drag to resize')} />
           <div className="dock-tabs">
             <button className={panel === 'chat' ? 'on' : ''} onClick={() => setPanel('chat')}>
-              채팅·자막
+              {t('채팅·자막', 'Chat & captions')}
             </button>
             <button className={panel === 'docs' ? 'on' : ''} onClick={() => setPanel('docs')}>
-              문서
+              {t('문서', 'Docs')}
             </button>
-            <button className="icon-btn small dock-close" onClick={() => setPanel(null)} aria-label="닫기">
+            <button className="icon-btn small dock-close" onClick={() => setPanel(null)} aria-label={t('닫기', 'Close')}>
               <CloseIcon />
             </button>
           </div>
