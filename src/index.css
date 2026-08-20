@@ -426,7 +426,7 @@ option {
 .chat-pins-label {
   font-size: 12px;
   font-weight: 700;
-  color: #a68eff;
+  color: var(--accent-2);
   white-space: nowrap;
 }
 .chat-pin-item {
@@ -496,7 +496,7 @@ option {
   word-break: break-word;
 }
 .mention {
-  color: #a68eff;
+  color: var(--accent-2);
   background: rgba(var(--accent-rgb), 0.16);
   border-radius: 5px;
   padding: 0 3px;
@@ -1827,8 +1827,9 @@ option {
 .notif-menu {
   position: absolute;
   top: 34px;
-  right: 0;
+  left: 0;
   width: 288px;
+  max-width: calc(100vw - 24px);
   max-height: 380px;
   display: flex;
   flex-direction: column;
@@ -2639,7 +2640,7 @@ option {
     height: 20px;
   }
   .mobile-tabs button.on {
-    color: #a68eff;
+    color: var(--accent-2);
     font-weight: 700;
   }
   /* Chatbot FAB clears the bottom tab bar */
@@ -2661,6 +2662,19 @@ option {
   .docs-list {
     width: auto;
     max-height: 38vh;
+  }
+  /* Comment/version panel stacks under the editor instead of squeezing it */
+  .docs-editor-body {
+    flex-direction: column;
+  }
+  .doc-side {
+    width: 100%;
+    border-left: 0;
+    border-top: 1px solid var(--glass-border);
+    padding-left: 0;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    max-height: 46vh;
   }
 }
 
@@ -2907,6 +2921,8 @@ option {
   min-height: 0;
   border-left: 1px solid var(--glass-border);
   padding-left: 14px;
+  /* clear the floating chatbot FAB so the 등록 button isn't covered */
+  padding-bottom: 72px;
 }
 .doc-side-head {
   display: flex;
@@ -3098,7 +3114,7 @@ option {
   animation: cap-in 0.18s ease-out;
 }
 .caption-speaker {
-  color: #a68eff;
+  color: var(--accent-2);
   font-weight: 800;
   font-size: 12px;
 }
