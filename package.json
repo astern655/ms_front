@@ -15,6 +15,7 @@
     "@blocknote/react": "^0.52.1",
     "@livekit/components-react": "^2.9.23",
     "@livekit/components-styles": "^1.2.0",
+    "@mediapipe/tasks-vision": "^0.10.35",
     "@supabase/supabase-js": "^2.112.0",
     "livekit-client": "^2.21.0",
     "react": "^19.2.8",

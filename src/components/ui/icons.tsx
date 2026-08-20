@@ -120,6 +120,15 @@ export const DocIcon = () => (
   </svg>
 )
 
+export const SignIcon = () => (
+  <svg {...base}>
+    <path d="M18 11V6a1.5 1.5 0 0 0-3 0" />
+    <path d="M15 6V4.5a1.5 1.5 0 0 0-3 0V6" />
+    <path d="M12 6V5a1.5 1.5 0 0 0-3 0v6" />
+    <path d="M9 8a1.5 1.5 0 0 0-3 0v5a7 7 0 0 0 7 7h1a6 6 0 0 0 6-6v-2" />
+  </svg>
+)
+
 export const BoardIcon = () => (
   <svg {...base}>
     <rect x="3" y="3" width="7" height="7" rx="1.5" />

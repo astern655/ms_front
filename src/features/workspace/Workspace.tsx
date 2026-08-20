@@ -18,20 +18,18 @@ import { GroupSettings } from '../groups/GroupSettings'
 import { ProfileEdit } from '../groups/ProfileEdit'
 import { DocsView } from '../docs/DocsView'
 import { ChatBot } from '../agent/ChatBot'
-import { AgentView } from '../agent/AgentView'
-import { BoardIcon, DocIcon, AiIcon, PeopleIcon, SettingsIcon, LogoutIcon } from '../../components/ui/icons'
+import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon } from '../../components/ui/icons'
 
 const serverUrl =
   (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
   'wss://ms-hack-ly6rx40h.livekit.cloud'
 
 type Profile = { id: string; name: string; language: string; job_role?: string | null }
-type View = 'board' | 'docs' | 'agent'
+type View = 'board' | 'docs'
 
 const NAV: { key: View; label: string; icon: () => ReactElement }[] = [
   { key: 'board', label: '팀 보드', icon: BoardIcon },
   { key: 'docs', label: '문서', icon: DocIcon },
-  { key: 'agent', label: '에이전트', icon: AiIcon },
 ]
 
 export function Workspace({
@@ -374,8 +372,6 @@ export function Workspace({
           />
         ) : view === 'docs' ? (
           <DocsView groupId={activeGroup.id} lang={profile.language} />
-        ) : view === 'agent' ? (
-          <AgentView groups={groups} activeGroupId={activeGroup.id} />
         ) : (
           <div className="board-wrap">
             <div className="board-head">

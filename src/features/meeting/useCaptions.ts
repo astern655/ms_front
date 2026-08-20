@@ -2,20 +2,31 @@ import { useEffect, useState } from 'react'
 import { RoomEvent, type Room } from 'livekit-client'
 import { decodeCaption, type TranscriptEntry } from './caption'
 import { startMic } from './mic'
+import { startSign } from './sign'
 
-// Collects the full caption log for a room: my mic (STT) + everyone else's
-// caption data. Shared by the overlay and the chat feed.
-// STT (OpenAI) is parked for now. Set VITE_STT_ENABLED=1 (and a valid OpenAI key
-// on the backend) to turn live transcription back on.
-const STT_ENABLED = import.meta.env.VITE_STT_ENABLED === '1'
+// Collects the full caption log for a room: my mic (STT via OpenAI) + everyone
+// else's caption/sign data. Shared by the overlay and the chat feed.
+// STT runs through the LLM backend (/api/stt). Set VITE_STT_ENABLED=0 to disable.
+const STT_ENABLED = import.meta.env.VITE_STT_ENABLED !== '0'
 
 export function useCaptions(
   room: Room,
-  opts: { speaker: string; sourceLang: string; targetLangs: string[] },
+  opts: { speaker: string; sourceLang: string; targetLangs: string[]; signEnabled?: boolean },
 ): TranscriptEntry[] {
   const [entries, setEntries] = useState<TranscriptEntry[]>([])
-  const { speaker, sourceLang } = opts
+  const { speaker, sourceLang, signEnabled } = opts
   const targetKey = opts.targetLangs.join(',')
+
+  // Sign-language input (client-side hand tracking → caption). Toggled at runtime.
+  useEffect(() => {
+    if (!signEnabled) return
+    const stop = startSign(room, {
+      speaker,
+      sourceLang,
+      onEntry: (e) => setEntries((prev) => [...prev, e]),
+    })
+    return stop
+  }, [room, signEnabled, speaker, sourceLang])
 
   useEffect(() => {
     const onData = (payload: Uint8Array, _p?: unknown, _k?: unknown, topic?: string) => {

@@ -27,20 +27,3 @@ export async function reindexRag(groupId: string): Promise<{ docs: number; chunk
     }),
   )
 }
-
-// Agent: generate a deliverable from records + direction.
-export type AgentMode = 'prd' | 'report' | 'plan' | 'design' | 'dev'
-
-export async function runAgent(
-  groupId: string,
-  mode: AgentMode,
-  direction: string,
-): Promise<{ title: string; content: string; sources: string[] }> {
-  return json(
-    await fetch(`${API_BASE}/api/agent/run`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ groupId, mode, direction }),
-    }),
-  )
-}

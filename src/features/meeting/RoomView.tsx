@@ -29,6 +29,7 @@ import {
   PeopleIcon,
   CloseIcon,
   DocIcon,
+  SignIcon,
 } from '../../components/ui/icons'
 
 function ParticipantsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -160,6 +161,7 @@ function RoomInner({
   const [speakerVolume, setSpeakerVolume] = useState(100)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [peopleOpen, setPeopleOpen] = useState(false)
+  const [signOn, setSignOn] = useState(false)
   const [panel, setPanel] = useState<'chat' | 'docs' | null>(null)
   const togglePanel = (p: 'chat' | 'docs') => setPanel((cur) => (cur === p ? null : p))
   const [dockWidth, setDockWidth] = useState(() =>
@@ -182,7 +184,12 @@ function RoomInner({
 
   const mic = useLocalMic(room, micDeviceId, !startAudioOn)
   useSpeakerVolume(speakerVolume / 100)
-  const captions = useCaptions(room, { speaker: name, sourceLang: lang, targetLangs: ['ko', 'en'] })
+  const captions = useCaptions(room, {
+    speaker: name,
+    sourceLang: lang,
+    targetLangs: ['ko', 'en'],
+    signEnabled: signOn,
+  })
 
   return (
     <>
@@ -226,6 +233,18 @@ function RoomInner({
               <ChatIcon />
             </button>
             <span className="ctrl-label">채팅·자막</span>
+          </div>
+          <div className="ctrl-item">
+            <button
+              className={`ctrl ${signOn ? 'ctrl-on' : 'ctrl-off'}`}
+              onClick={() => setSignOn((v) => !v)}
+              aria-pressed={signOn}
+              aria-label="수화"
+              title="수화 인식"
+            >
+              <SignIcon />
+            </button>
+            <span className="ctrl-label">수화</span>
           </div>
           <div className="ctrl-item">
             <button
