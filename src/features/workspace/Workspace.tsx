@@ -19,6 +19,7 @@ import { ProfileEdit } from '../groups/ProfileEdit'
 import { DocsView } from '../docs/DocsView'
 import { TeamChat } from '../chat/TeamChat'
 import { ChatBot } from '../agent/ChatBot'
+import { NotificationsBell } from '../notifications/NotificationsBell'
 import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon } from '../../components/ui/icons'
 
 const serverUrl =
@@ -312,6 +313,7 @@ export function Workspace({
       <aside className="sidebar">
         <div className="sidebar-head">
           <span className="sidebar-group">{activeGroup.name}</span>
+          <NotificationsBell userId={profile.id} />
           {isOwner && (
             <button className="icon-btn small" onClick={() => setSettingsOpen(true)} title="그룹 설정">
               <SettingsIcon />
