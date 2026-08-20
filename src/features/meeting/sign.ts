@@ -8,16 +8,25 @@ const MODEL =
 
 // Small demo vocabulary. Each entry: finger pattern [thumb, index, middle, ring, pinky]
 // mapped to a bilingual phrase. Client-side only — no server/STT needed.
-type Gesture = { id: string; pattern: [boolean, boolean, boolean, boolean, boolean]; ko: string; en: string }
+type Gesture = {
+  id: string
+  pattern: [boolean, boolean, boolean, boolean, boolean]
+  emoji: string
+  ko: string
+  en: string
+}
 const GESTURES: Gesture[] = [
-  { id: 'open', pattern: [true, true, true, true, true], ko: '안녕하세요', en: 'Hello' },
-  { id: 'fist', pattern: [false, false, false, false, false], ko: '아니요', en: 'No' },
-  { id: 'thumb', pattern: [true, false, false, false, false], ko: '좋아요', en: 'Good' },
-  { id: 'v', pattern: [false, true, true, false, false], ko: '반가워요', en: 'Nice to meet you' },
-  { id: 'point', pattern: [false, true, false, false, false], ko: '저기요', en: 'Excuse me' },
-  { id: 'call', pattern: [true, false, false, false, true], ko: '통화해요', en: "Let's call" },
-  { id: 'ily', pattern: [true, true, false, false, true], ko: '사랑해요', en: 'I love you' },
+  { id: 'open', pattern: [true, true, true, true, true], emoji: '✋', ko: '안녕하세요', en: 'Hello' },
+  { id: 'fist', pattern: [false, false, false, false, false], emoji: '✊', ko: '아니요', en: 'No' },
+  { id: 'thumb', pattern: [true, false, false, false, false], emoji: '👍', ko: '좋아요', en: 'Good' },
+  { id: 'v', pattern: [false, true, true, false, false], emoji: '✌️', ko: '반가워요', en: 'Nice to meet you' },
+  { id: 'point', pattern: [false, true, false, false, false], emoji: '☝️', ko: '저기요', en: 'Excuse me' },
+  { id: 'call', pattern: [true, false, false, false, true], emoji: '🤙', ko: '통화해요', en: "Let's call" },
+  { id: 'ily', pattern: [true, true, false, false, true], emoji: '🤟', ko: '사랑해요', en: 'I love you' },
 ]
+
+// Legend for the UI so a user knows which hand shapes produce which phrase.
+export const SIGN_GLOSSARY = GESTURES.map((g) => ({ emoji: g.emoji, ko: g.ko, en: g.en }))
 
 const dist = (a: NormalizedLandmark, b: NormalizedLandmark) => Math.hypot(a.x - b.x, a.y - b.y)
 
@@ -118,7 +127,7 @@ export function startSign(
               holdFrames = 1
             }
             const now = Date.now()
-            if (holdFrames >= 6 && now - lastEmit > 2500) {
+            if (holdFrames >= 4 && now - lastEmit > 1800) {
               lastEmit = now
               holdFrames = 0
               emit(g)

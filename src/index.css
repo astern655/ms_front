@@ -2140,6 +2140,32 @@ option {
 .sign-detected {
   color: var(--accent-2);
 }
+.sign-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px 12px;
+  border-top: 1px solid var(--glass-border);
+}
+.sign-legend-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin-bottom: 2px;
+}
+.sign-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.sign-legend-emoji {
+  font-size: 16px;
+  width: 22px;
+  text-align: center;
+}
 .breakout-banner {
   position: absolute;
   top: 16px;

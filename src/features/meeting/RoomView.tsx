@@ -22,7 +22,7 @@ import { ChatFeed } from './ChatPanel'
 import { DocsView } from '../docs/DocsView'
 import { useLocalMic } from './useLocalMic'
 import { useCaptions } from './useCaptions'
-import type { SignStatus } from './sign'
+import { SIGN_GLOSSARY, type SignStatus } from './sign'
 import {
   MicIcon,
   MicOffIcon,
@@ -291,10 +291,19 @@ function RoomInner({
               ) : signStatus.label ? (
                 <span className="sign-detected">✋ {signStatus.label}</span>
               ) : signStatus.hand ? (
-                <span>{t('✋ 손 인식됨 — 제스처를 취해보세요', '✋ Hand detected — try a gesture')}</span>
+                <span>{t('✋ 손 인식됨 — 아래 동작을 따라해보세요', '✋ Hand detected — try a shape below')}</span>
               ) : (
                 <span>{t('손을 화면에 보여주세요', 'Show your hand to the camera')}</span>
               )}
+            </div>
+            <div className="sign-legend">
+              <div className="sign-legend-title">{t('인식 가능한 동작', 'Recognized signs')}</div>
+              {SIGN_GLOSSARY.map((g) => (
+                <div key={g.emoji} className="sign-legend-item">
+                  <span className="sign-legend-emoji">{g.emoji}</span>
+                  <span>{lang === 'en' ? g.en : g.ko}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
