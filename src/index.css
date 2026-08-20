@@ -2288,6 +2288,26 @@ option {
   color: var(--text);
 }
 
+.doc-star {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0;
+}
+.doc-item.tree:hover .doc-star {
+  opacity: 1;
+}
+.doc-star.on {
+  opacity: 1;
+  color: #ffcf3f;
+}
+
 .docs-editor {
   position: relative;
   flex: 1;

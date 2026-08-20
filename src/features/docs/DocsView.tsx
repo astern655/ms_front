@@ -137,6 +137,21 @@ export function DocsView({ groupId, lang = 'ko' }: { groupId: string; lang?: str
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [newMenu, setNewMenu] = useState(false)
+  const favKey = `borderless.fav.${groupId}`
+  const [favs, setFavs] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(`borderless.fav.${groupId}`) || '[]'))
+    } catch {
+      return new Set()
+    }
+  })
+  const toggleFav = (id: string) =>
+    setFavs((prev) => {
+      const n = new Set(prev)
+      n.has(id) ? n.delete(id) : n.add(id)
+      localStorage.setItem(favKey, JSON.stringify([...n]))
+      return n
+    })
   const titleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const open = (d: Doc) => {
@@ -263,6 +278,13 @@ export function DocsView({ groupId, lang = 'ko' }: { groupId: string; lang?: str
           <button className="doc-title-btn" onClick={() => open(d)}>
             {d.title || '제목 없음'}
           </button>
+          <button
+            className={`doc-star ${favs.has(d.id) ? 'on' : ''}`}
+            title="즐겨찾기"
+            onClick={() => toggleFav(d.id)}
+          >
+            {favs.has(d.id) ? '★' : '☆'}
+          </button>
           <button className="doc-add-child" title="하위 페이지 추가" onClick={() => addChild(d)}>
             +
           </button>
@@ -331,15 +353,47 @@ export function DocsView({ groupId, lang = 'ko' }: { groupId: string; lang?: str
               ))}
           </div>
         ) : (
-          SCOPES.map((s) => {
-            const roots = docs.filter((d) => d.scope === s.v && !d.parent_id)
-            return (
-              <div key={s.v} className="doc-section">
-                <div className="doc-section-title">{s.l}</div>
-                {roots.map((d) => renderNode(d, 0))}
-              </div>
-            )
-          })
+          <>
+            {(() => {
+              const favDocs = docs.filter((d) => favs.has(d.id))
+              const recent = [...docs]
+                .sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''))
+                .slice(0, 4)
+              const flatRow = (d: Doc) => (
+                <div key={d.id} className={`doc-item tree ${d.id === activeId ? 'on' : ''}`}>
+                  <span className="doc-caret spacer" />
+                  <button className="doc-title-btn" onClick={() => open(d)}>
+                    {d.title || '제목 없음'}
+                  </button>
+                </div>
+              )
+              return (
+                <>
+                  {favDocs.length > 0 && (
+                    <div className="doc-section">
+                      <div className="doc-section-title">★ 즐겨찾기</div>
+                      {favDocs.map(flatRow)}
+                    </div>
+                  )}
+                  {recent.length > 0 && (
+                    <div className="doc-section">
+                      <div className="doc-section-title">최근</div>
+                      {recent.map(flatRow)}
+                    </div>
+                  )}
+                </>
+              )
+            })()}
+            {SCOPES.map((s) => {
+              const roots = docs.filter((d) => d.scope === s.v && !d.parent_id)
+              return (
+                <div key={s.v} className="doc-section">
+                  <div className="doc-section-title">{s.l}</div>
+                  {roots.map((d) => renderNode(d, 0))}
+                </div>
+              )
+            })}
+          </>
         )}
       </aside>
 
