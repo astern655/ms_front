@@ -514,6 +514,32 @@ option {
   padding: 12px 88px 18px 22px; /* right space so the floating chatbot FAB doesn't cover 보내기 */
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
+.chat-attach {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  font-size: 17px;
+  cursor: pointer;
+}
+.chat-attach:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.06);
+}
+.chat-attach:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.chat-image {
+  max-width: min(320px, 100%);
+  max-height: 260px;
+  border-radius: 12px;
+  margin-top: 4px;
+  display: block;
+  object-fit: cover;
+}
 
 /* --- Prejoin (device preview before joining) --- */
 .prejoin {

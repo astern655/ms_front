@@ -14,6 +14,18 @@ export type Message = {
 }
 export type Reaction = { message_id: string; user_id: string; emoji: string }
 
+// Upload a chat image to the public bucket, return its public URL.
+export async function uploadChatImage(teamId: string, file: File): Promise<string> {
+  const ext = file.name.split('.').pop() || 'png'
+  const path = `chat/${teamId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+  const { error } = await supabase.storage.from('doc-images').upload(path, file, {
+    contentType: file.type || 'image/png',
+    upsert: false,
+  })
+  if (error) throw error
+  return supabase.storage.from('doc-images').getPublicUrl(path).data.publicUrl
+}
+
 export async function listMessages(teamId: string): Promise<Message[]> {
   const { data, error } = await supabase
     .from('messages')

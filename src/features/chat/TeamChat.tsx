@@ -9,9 +9,12 @@ import {
   setPinned,
   toggleReaction,
   notifyMentions,
+  uploadChatImage,
   type Message,
   type Reaction,
 } from './messages'
+
+const IMG_RE = /^https?:\/\/\S+\.(png|jpe?g|gif|webp)(\?\S*)?$/i
 
 const EMOJIS = ['👍', '❤️', '😂', '🎉', '👀']
 
@@ -35,7 +38,9 @@ export function TeamChat({
   const [members, setMembers] = useState<Member[]>([])
   const [text, setText] = useState('')
   const [error, setError] = useState('')
+  const [uploading, setUploading] = useState(false)
   const listRef = useRef<HTMLDivElement>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const scroll = () =>
     requestAnimationFrame(() => listRef.current?.scrollTo({ top: 1e9, behavior: 'smooth' }))
@@ -110,6 +115,18 @@ export function TeamChat({
       if (mentioned.length) notifyMentions(mentioned.map((m) => m.user_id), userName, content).catch(() => {})
     } catch (e) {
       setError((e as Error).message)
+    }
+  }
+
+  const attachImage = async (file: File) => {
+    setUploading(true)
+    try {
+      const url = await uploadChatImage(teamId, file)
+      await sendMessage({ groupId, teamId, userId, name: userName, content: url })
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -192,7 +209,15 @@ export function TeamChat({
                   )}
                 </div>
               </div>
-              <div className="chat-body">{renderContent(m.content)}</div>
+              <div className="chat-body">
+                {IMG_RE.test(m.content.trim()) ? (
+                  <a href={m.content.trim()} target="_blank" rel="noreferrer">
+                    <img className="chat-image" src={m.content.trim()} alt="첨부 이미지" />
+                  </a>
+                ) : (
+                  renderContent(m.content)
+                )}
+              </div>
               {Object.keys(rx).length > 0 && (
                 <div className="chat-reactions">
                   {Object.entries(rx).map(([emoji, v]) => (
@@ -212,6 +237,26 @@ export function TeamChat({
       </div>
 
       <div className="chat-input chat-compose">
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          hidden
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) attachImage(f)
+            e.target.value = ''
+          }}
+        />
+        <button
+          className="chat-attach"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          title="이미지 첨부"
+          aria-label="이미지 첨부"
+        >
+          {uploading ? '…' : '📎'}
+        </button>
         <input
           className="field"
           placeholder={`#${teamName}에 메시지 (@이름 멘션)`}
