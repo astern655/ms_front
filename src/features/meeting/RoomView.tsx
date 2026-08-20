@@ -147,11 +147,13 @@ function Toggle({
 
 function RoomInner({
   name,
+  userId,
   lang,
   groupId,
   startAudioOn,
 }: {
   name: string
+  userId?: string
   lang: string
   groupId: string
   startAudioOn: boolean
@@ -312,7 +314,7 @@ function RoomInner({
           </div>
           <div className="dock-body">
             {panel === 'chat' && <ChatFeed captions={captions} displayLang={lang} myName={name} />}
-            {panel === 'docs' && <DocsView groupId={groupId} lang={lang} />}
+            {panel === 'docs' && <DocsView groupId={groupId} lang={lang} userId={userId} userName={name} />}
           </div>
         </div>
       )}
@@ -324,6 +326,7 @@ export function RoomView({
   serverUrl,
   token,
   name,
+  userId,
   lang,
   groupId,
   startVideo = true,
@@ -333,6 +336,7 @@ export function RoomView({
   serverUrl: string
   token: string
   name: string
+  userId?: string
   lang: string
   groupId: string
   startVideo?: boolean
@@ -350,7 +354,7 @@ export function RoomView({
       onDisconnected={onLeave}
     >
       <RoomAudioRenderer />
-      <RoomInner name={name} lang={lang} groupId={groupId} startAudioOn={startAudioOn} />
+      <RoomInner name={name} userId={userId} lang={lang} groupId={groupId} startAudioOn={startAudioOn} />
     </LiveKitRoom>
   )
 }

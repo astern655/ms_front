@@ -1,6 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
+import { supabase } from '../../lib/supabase'
 import { listDocs, createDoc, saveDoc, deleteDoc, type Doc, type DocScope } from './docs'
 import { DocEditor } from './DocEditor'
+import {
+  listComments,
+  addComment,
+  deleteComment,
+  listVersions,
+  saveVersion,
+  type DocComment,
+  type DocVersion,
+} from './collab'
 
 const SCOPES: { v: DocScope; l: string }[] = [
   { v: 'personal', l: '개인' },
@@ -125,7 +135,17 @@ function blocksToMarkdown(json: string): string {
   }
 }
 
-export function DocsView({ groupId, lang = 'ko' }: { groupId: string; lang?: string }) {
+export function DocsView({
+  groupId,
+  lang = 'ko',
+  userId,
+  userName,
+}: {
+  groupId: string
+  lang?: string
+  userId?: string
+  userName?: string
+}) {
   const [docs, setDocs] = useState<Doc[]>([])
   const [activeId, setActiveId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
@@ -137,6 +157,10 @@ export function DocsView({ groupId, lang = 'ko' }: { groupId: string; lang?: str
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
   const [newMenu, setNewMenu] = useState(false)
+  const [sidePanel, setSidePanel] = useState<'comments' | 'versions' | null>(null)
+  const [comments, setComments] = useState<DocComment[]>([])
+  const [versions, setVersions] = useState<DocVersion[]>([])
+  const [newComment, setNewComment] = useState('')
   const favKey = `borderless.fav.${groupId}`
   const [favs, setFavs] = useState<Set<string>>(() => {
     try {
@@ -225,6 +249,64 @@ export function DocsView({ groupId, lang = 'ko' }: { groupId: string; lang?: str
       }
       setDocs((prev) => [doc, ...prev])
       open(doc)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  // Load comments + realtime for the open doc.
+  useEffect(() => {
+    if (!activeId) {
+      setComments([])
+      return
+    }
+    listComments(activeId).then(setComments).catch(() => {})
+    const ch = supabase
+      .channel(`doc:${activeId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'doc_comments', filter: `doc_id=eq.${activeId}` },
+        () => listComments(activeId).then(setComments).catch(() => {}),
+      )
+      .subscribe()
+    return () => {
+      supabase.removeChannel(ch)
+    }
+  }, [activeId])
+
+  const postComment = async () => {
+    const content = newComment.trim()
+    if (!content || !activeId || !userId) return
+    setNewComment('')
+    try {
+      await addComment({ docId: activeId, groupId, userId, name: userName ?? '나', content })
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const openVersions = async () => {
+    setSidePanel('versions')
+    if (activeId) listVersions(activeId).then(setVersions).catch((e) => setError((e as Error).message))
+  }
+
+  const snapshotVersion = async () => {
+    if (!activeId || !userId) return
+    try {
+      await saveVersion({ docId: activeId, groupId, title, content: activeContent, userId })
+      setVersions(await listVersions(activeId))
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const restoreVersion = async (v: DocVersion) => {
+    if (!activeId) return
+    try {
+      await saveDoc(activeId, { title: v.title ?? '', content: v.content ?? '' })
+      setActiveContent(v.content ?? '')
+      setTitle(v.title ?? '')
+      setDocs((prev) => prev.map((d) => (d.id === activeId ? { ...d, title: v.title ?? '' } : d)))
     } catch (e) {
       setError((e as Error).message)
     }
@@ -432,6 +514,18 @@ export function DocsView({ groupId, lang = 'ko' }: { groupId: string; lang?: str
                   </>
                 )}
               </div>
+              <button
+                className={`btn-mini ghost ${sidePanel === 'comments' ? 'on' : ''}`}
+                onClick={() => setSidePanel((p) => (p === 'comments' ? null : 'comments'))}
+              >
+                댓글{comments.length > 0 ? ` ${comments.length}` : ''}
+              </button>
+              <button
+                className={`btn-mini ghost ${sidePanel === 'versions' ? 'on' : ''}`}
+                onClick={() => (sidePanel === 'versions' ? setSidePanel(null) : openVersions())}
+              >
+                버전
+              </button>
               <button className="btn-mini ghost" onClick={exportMd} title="마크다운으로 내보내기">
                 내보내기
               </button>
@@ -439,7 +533,90 @@ export function DocsView({ groupId, lang = 'ko' }: { groupId: string; lang?: str
                 ✕
               </button>
             </div>
-            <DocEditor key={activeId} content={activeContent} onChange={onContent} lang={lang} />
+            <div className="docs-editor-body">
+              <DocEditor key={activeId} content={activeContent} onChange={onContent} lang={lang} />
+
+              {sidePanel === 'comments' && (
+                <aside className="doc-side">
+                  <div className="doc-side-head">댓글 {comments.length}</div>
+                  <div className="doc-side-list">
+                    {comments.length === 0 && <p className="ai-empty">첫 댓글을 남겨보세요.</p>}
+                    {comments.map((c) => (
+                      <div key={c.id} className="doc-comment">
+                        <div className="doc-comment-head">
+                          <span className="doc-comment-author">{c.author_name}</span>
+                          <span className="chat-time">
+                            {new Date(c.created_at).toLocaleString('ko-KR', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                          {c.user_id === userId && (
+                            <button
+                              className="doc-comment-del"
+                              onClick={() => deleteComment(c.id).catch(() => {})}
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                        <div className="doc-comment-body">{c.content}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {userId && (
+                    <div className="chat-input doc-comment-compose">
+                      <input
+                        className="field"
+                        placeholder="댓글 달기"
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && postComment()}
+                      />
+                      <button className="ai-send" onClick={postComment}>
+                        등록
+                      </button>
+                    </div>
+                  )}
+                </aside>
+              )}
+
+              {sidePanel === 'versions' && (
+                <aside className="doc-side">
+                  <div className="doc-side-head">
+                    버전 히스토리
+                    {userId && (
+                      <button className="btn-mini" onClick={snapshotVersion}>
+                        현재 저장
+                      </button>
+                    )}
+                  </div>
+                  <div className="doc-side-list">
+                    {versions.length === 0 && <p className="ai-empty">저장된 버전이 없어요.</p>}
+                    {versions.map((v) => (
+                      <div key={v.id} className="doc-version">
+                        <div className="doc-version-meta">
+                          <span className="doc-version-title">{v.title || '제목 없음'}</span>
+                          <span className="chat-time">
+                            {new Date(v.created_at).toLocaleString('ko-KR', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
+                        <button className="btn-mini ghost" onClick={() => restoreVersion(v)}>
+                          복원
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </aside>
+              )}
+            </div>
           </>
         ) : (
           <div className="ws-empty">

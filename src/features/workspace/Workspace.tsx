@@ -411,6 +411,7 @@ export function Workspace({
             serverUrl={serverUrl}
             token={active.token}
             name={profile.name}
+            userId={profile.id}
             lang={profile.language}
             groupId={active.team.group_id}
             startVideo={active.video}
@@ -428,7 +429,12 @@ export function Workspace({
             onEnterMeeting={() => enterTeam(channelTeam)}
           />
         ) : view === 'docs' ? (
-          <DocsView groupId={activeGroup.id} lang={profile.language} />
+          <DocsView
+            groupId={activeGroup.id}
+            lang={profile.language}
+            userId={profile.id}
+            userName={profile.name}
+          />
         ) : (
           <div className="board-wrap">
             <div className="board-head">
