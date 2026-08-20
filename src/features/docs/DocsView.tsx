@@ -534,7 +534,15 @@ export function DocsView({
               </button>
             </div>
             <div className="docs-editor-body">
-              <DocEditor key={activeId} content={activeContent} onChange={onContent} lang={lang} />
+              <DocEditor
+                key={activeId}
+                docId={activeId}
+                groupId={groupId}
+                userName={userName}
+                content={activeContent}
+                onChange={onContent}
+                lang={lang}
+              />
 
               {sidePanel === 'comments' && (
                 <aside className="doc-side">
