@@ -1912,6 +1912,85 @@ option {
   border-radius: 50%;
   background: #30d158;
 }
+.sched {
+  margin-bottom: 22px;
+}
+.sched-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.sched-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+.sched-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+.sched-form-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.sched-form-row .field {
+  flex: 1;
+  min-width: 120px;
+}
+.sched-empty {
+  color: var(--text-2);
+  font-size: 13px;
+}
+.sched-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sched-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+}
+.sched-when {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  flex: 0 0 auto;
+  min-width: 116px;
+}
+.sched-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.sched-name {
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sched-team {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.sched-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
 .channel-row {
   position: relative;
   display: flex;

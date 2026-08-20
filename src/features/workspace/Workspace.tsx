@@ -21,6 +21,7 @@ import { TeamChat } from '../chat/TeamChat'
 import { ChatBot } from '../agent/ChatBot'
 import { NotificationsBell } from '../notifications/NotificationsBell'
 import { listMutedTeams, setMuted } from '../chat/mutes'
+import { MeetingSchedule } from '../meeting/MeetingSchedule'
 import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon, BellOffIcon } from '../../components/ui/icons'
 
 const serverUrl =
@@ -472,6 +473,14 @@ export function Workspace({
                 <p className="board-sub">누가 어느 팀에 있는지 확인하고 바로 입장하세요.</p>
               </div>
             </div>
+            {teams.length > 0 && (
+              <MeetingSchedule
+                groupId={activeGroup.id}
+                teams={teams}
+                userId={profile.id}
+                onEnter={enterTeam}
+              />
+            )}
             <div className="board">
               {teams.map((t) => {
                 const here = presence[t.id] ?? []
