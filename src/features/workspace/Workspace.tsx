@@ -27,7 +27,7 @@ import { NotificationsBell } from '../notifications/NotificationsBell'
 import { listMutedTeams, setMuted } from '../chat/mutes'
 import { MeetingSchedule } from '../meeting/MeetingSchedule'
 import { DMView } from '../chat/DMView'
-import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon, BellOffIcon } from '../../components/ui/icons'
+import { BoardIcon, DocIcon, PeopleIcon, SettingsIcon, LogoutIcon, BellOffIcon, CloseIcon } from '../../components/ui/icons'
 
 const serverUrl =
   (import.meta.env.VITE_LIVEKIT_URL as string | undefined) ??
@@ -356,33 +356,9 @@ export function Workspace({
           </button>
         ))}
         <div className="rail-add-wrap">
-          <button className="rail-add" onClick={() => setRailMenu((v) => !v)} title="그룹 추가/참가">
+          <button className="rail-add" onClick={() => setRailMenu(true)} title="그룹 추가/참가">
             +
           </button>
-          {railMenu && (
-            <>
-              <div className="menu-catch" onClick={() => setRailMenu(false)} />
-              <div className="rail-menu glass">
-                <span className="rail-menu-label">새 그룹</span>
-                <input
-                  className="field"
-                  placeholder="그룹 이름 + Enter"
-                  value={newGroup}
-                  autoFocus
-                  onChange={(e) => setNewGroup(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && addGroup()}
-                />
-                <span className="rail-menu-label">초대로 참가</span>
-                <input
-                  className="field"
-                  placeholder="초대 링크/코드 + Enter"
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
-                />
-              </div>
-            </>
-          )}
         </div>
         <span className="rail-spacer" />
         <button className="rail-icon" onClick={onSignOut} title="로그아웃">
@@ -648,6 +624,46 @@ export function Workspace({
       )}
       {profileOpen && (
         <ProfileEdit profile={profile} onClose={() => setProfileOpen(false)} onSaved={onProfileChange} />
+      )}
+
+      {railMenu && (
+        <div className="modal-backdrop" onClick={() => setRailMenu(false)}>
+          <div
+            className="glass modal group-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label="그룹 추가·참가"
+          >
+            <div className="modal-head">
+              <h2>그룹 추가 · 참가</h2>
+              <button className="icon-btn small" onClick={() => setRailMenu(false)} aria-label="닫기">
+                <CloseIcon />
+              </button>
+            </div>
+            <section className="setting-group">
+              <div className="section-title">새 그룹 만들기</div>
+              <input
+                className="field"
+                placeholder="그룹 이름 + Enter"
+                value={newGroup}
+                autoFocus
+                onChange={(e) => setNewGroup(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addGroup()}
+              />
+            </section>
+            <section className="setting-group">
+              <div className="section-title">초대로 참가</div>
+              <input
+                className="field"
+                placeholder="초대 링크 또는 코드 + Enter"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && joinGroup()}
+              />
+            </section>
+            {error && <p className="error">{error}</p>}
+          </div>
+        </div>
       )}
 
       {waiting && (
