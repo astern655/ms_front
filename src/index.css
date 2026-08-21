@@ -1040,8 +1040,18 @@ option {
   gap: 8px;
 }
 
+/* Dock is narrow: give the list a readable, proportional width and compact the editor. */
 .dock .docs-list {
-  width: 150px;
+  width: clamp(170px, 32%, 220px);
+}
+.dock .docs-editor {
+  padding: 14px 16px;
+}
+.dock .doc-title {
+  font-size: 20px;
+}
+.dock .docs-editor-head {
+  gap: 8px;
 }
 
 .doc-section {
