@@ -2779,7 +2779,15 @@ option {
   }
   .docs-list {
     width: auto;
-    max-height: 38vh;
+    max-height: 34vh;
+  }
+  /* Editor header: title on its own row so the buttons don't collapse it */
+  .doc-title {
+    flex-basis: 100%;
+    font-size: 20px;
+  }
+  .docs-editor {
+    padding: 14px 16px;
   }
   /* Comment/version panel stacks under the editor instead of squeezing it */
   .docs-editor-body {

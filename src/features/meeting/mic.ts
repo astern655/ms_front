@@ -30,6 +30,9 @@ export function startMic(
       const res = await apiFetch(
         `/api/stt?sourceLang=${opts.sourceLang}&targetLangs=${opts.targetLangs.join(',')}`,
         { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: blob },
+        // If the primary STT backend hangs (>9s), fall back to the secondary so captions
+        // keep flowing instead of silently stalling.
+        9000,
       )
       if (!res.ok) return
       const { sourceText, translations } = await res.json()
