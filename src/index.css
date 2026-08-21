@@ -674,7 +674,8 @@ option {
   position: absolute;
   left: -3px;
   top: 0;
-  bottom: 0;
+  /* stop above the centered control bar so the grab strip doesn't intercept its buttons */
+  bottom: 96px;
   width: 8px;
   cursor: col-resize;
   z-index: 27;

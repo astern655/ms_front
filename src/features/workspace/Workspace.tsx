@@ -701,7 +701,8 @@ export function Workspace({
         </div>
       )}
 
-      <ChatBot groupId={activeGroup.id} />
+      {/* Hide the floating assistant while the meeting is fullscreen — it overlaps the dock. */}
+      {!(active && !meetingMinimized) && <ChatBot groupId={activeGroup.id} />}
     </div>
   )
 }
